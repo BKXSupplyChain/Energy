@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -13,7 +12,6 @@ import (
 
 // Can be expended in many listeners
 func startListening(idx string) {
-	fmt.Printf("Setting listener...%s\n", idx)
 	sl := types.SensorListener{IP: conf.GetServerIP(idx), Port: conf.GetServerPort(idx)}
 	tcpl, err := net.ListenTCP("tcp", &net.TCPAddr{IP: sl.IP, Port: sl.Port, Zone: ""})
 	utils.CheckFatal(err)
