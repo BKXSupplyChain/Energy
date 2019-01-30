@@ -13,6 +13,7 @@ import (
 // Can be expended in many listeners
 func startListening(idx string) {
 	sl := types.SensorListener{IP: conf.GetServerIP(idx), Port: conf.GetServerPort(idx)}
+	log.Printf("Port: %d\n", sl.Port)
 	tcpl, err := net.ListenTCP("tcp", &net.TCPAddr{IP: sl.IP, Port: sl.Port, Zone: ""})
 	utils.CheckFatal(err)
 	sl.TCPL = tcpl

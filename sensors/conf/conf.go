@@ -19,5 +19,5 @@ func GetServerIP(idx string) []byte {
 }
 
 func GetServerPort(idx string) int {
-	return config.Get("servers", "1", "port").Int(0)
+	return config.Get("servers", idx, "port").Int(0)
 }
