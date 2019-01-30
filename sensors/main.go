@@ -50,5 +50,8 @@ func main() {
 	utils.CheckFatal(err)
 	defer file.Close()
 	log.SetOutput(file)
+	// Set up config
+	conf.LoadConfig("config.json")
+
 	startListening("1")
 }
