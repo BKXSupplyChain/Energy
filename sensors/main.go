@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -12,7 +13,7 @@ import (
 
 // Can be expended in many listeners
 func startListening(idx string) {
-	log.Printf("Setting listener...%s\n", idx)
+	fmt.Printf("Setting listener...%s\n", idx)
 	sl := types.SensorListener{IP: conf.GetServerIP(idx), Port: conf.GetServerPort(idx)}
 	tcpl, err := net.ListenTCP("tcp", &net.TCPAddr{IP: sl.IP, Port: sl.Port, Zone: ""})
 	utils.CheckFatal(err)
@@ -46,7 +47,7 @@ func handleRequest(conn net.Conn) {
 
 func main() {
 	// Set up logging
-	file, err := os.OpenFile("main.log", os.O_CREATE|os.O_APPEND, 0644)
+	file, err := os.OpenFile("main.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	utils.CheckFatal(err)
 	defer file.Close()
 	log.SetOutput(file)
