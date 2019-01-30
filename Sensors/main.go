@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/BKXSupplyChain/Energy/Sensors/conf"
+	"github.com/BKXSupplyChain/Energy/sensors/conf"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
 )
