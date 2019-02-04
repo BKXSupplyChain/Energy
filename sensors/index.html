@@ -9,11 +9,11 @@
     <form action="/login" method="POST">
         <h3>Congratulations! Just answer questions below to complete setup:</h3>
       
-        <p><input type="text" name="wifi_ssid" placeholder="WiFi SSID"/></p>
-        <p><input type="password" name="wifi_pass" placeholder="WiFi Password"/></p>
-        <p><input type="text" name="data_url" placeholder="Sending URL or IP"/></p>
-        <p><input type="text" name="data_port" placeholder="Sending port"/></p>
-        <p><input type="text" name="token" placeholder="Personal token"/></p>
+        <p><input type="text" name="wifi_ssid" placeholder="WiFi SSID" maxlength="100"/></p>
+        <p><input type="password" name="wifi_pass" placeholder="WiFi Password" maxlength="100"/></p>
+        <p><input type="text" name="data_url" placeholder="Sending URL or IP" maxlength="100"/></p>
+        <p><input type="text" name="data_port" placeholder="Sending port" maxlength="10"/></p>
+        <p><input type="text" name="token" placeholder="Personal token" maxlength="512"/></p>
         <input type="submit" value="Login">
     </form>
 </div>
