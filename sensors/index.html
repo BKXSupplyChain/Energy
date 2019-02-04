@@ -5,18 +5,17 @@
     <title>Sensor setup</title>
 </head>
 <body>
-<div align="center"><form action="submit">
-    <h3>Congratulations! Just answer questions below to complete setup:</h3>
-    <p>Wifi network:</p>
-    <p>SSID:&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<input type="text" name="WifiSSID"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        Password:&nbsp;&nbsp;<input type="password" name="WifiPass"/></p>
-    <p>Conntrol panel:</p>
-    <p>Address:&nbsp; &nbsp; &nbsp; &nbsp;<input type="text" name="ServerAddr"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        Password:&nbsp;&nbsp;<input type="password" name="ServerPass"/></p>
-    <p>Neighbor data:</p>
-    <p>Short name:&nbsp;&nbsp;<input type="text" name="NbrName"/>&nbsp; &nbsp; &nbsp;
-        Public key:&nbsp;<input type="file" name="NbrPubKey"/></p>
-    <input type="submit" />
-</form></div>
+<div align="center">
+    <form action="/login" method="POST">
+        <h3>Congratulations! Just answer questions below to complete setup:</h3>
+      
+        <p><input type="text" name="wifi_ssid" placeholder="WiFi SSID"/></p>
+        <p><input type="password" name="wifi_pass" placeholder="WiFi Password"/></p>
+        <p><input type="text" name="data_url" placeholder="Sending URL or IP"/></p>
+        <p><input type="text" name="data_port" placeholder="Sending port"/></p>
+        <p><input type="text" name="token" placeholder="Personal token"/></p>
+        <input type="submit" value="Login">
+    </form>
+</div>
 </body>
 </html>
