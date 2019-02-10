@@ -13,11 +13,19 @@ func LoadConfig(path string) {
 	))
 }
 
+func GetServerIPAsString(idx string) string {
+	return config.Get("servers", idx, "ip").String("")
+}
+
 func GetServerIP(idx string) []byte {
-	IPStr := config.Get("servers", idx, "ip").String("")
+	IPStr := GetServerIPAsString(idx)
 	return utils.ConvertIPToBytes(IPStr)
 }
 
 func GetServerPort(idx string) int {
 	return config.Get("servers", idx, "port").Int(0)
+}
+
+func GetServerPortAsString(idx string) string {
+	return config.Get("servers", idx, "port").String("")
 }

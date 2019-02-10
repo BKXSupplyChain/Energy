@@ -6,20 +6,16 @@ import (
 	"os"
 
 	"github.com/BKXSupplyChain/Energy/sensors/conf"
-	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
 )
 
 // Can be expended in many listeners
 func startListening(idx string) {
-	sl := types.SensorListener{IP: conf.GetServerIP(idx), Port: conf.GetServerPort(idx)}
-	log.Printf("Port: %d\n", sl.Port)
-	tcpl, err := net.ListenTCP("tcp", &net.TCPAddr{IP: sl.IP, Port: sl.Port, Zone: ""})
+	listener, err := net.Listen("tcp", conf.GetServerIPAsString(idx)+":"+conf.GetServerPortAsString(idx))
 	utils.CheckFatal(err)
-	sl.TCPL = tcpl
 	log.Printf("Listener %s is running\n", idx)
 	for {
-		conn, err := sl.TCPL.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
 			utils.CheckNotFatal(err)
 			continue
