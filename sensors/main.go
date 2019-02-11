@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -11,6 +12,8 @@ import (
 
 // Can be expended in many listeners
 func startListening(idx string) {
+	connStr := conf.GetServerIPAsString(idx) + ":" + conf.GetServerPortAsString(idx)
+	fmt.Println(connStr)
 	listener, err := net.Listen("tcp", conf.GetServerIPAsString(idx)+":"+conf.GetServerPortAsString(idx))
 	utils.CheckFatal(err)
 	log.Printf("Listener %s is running\n", idx)
@@ -48,6 +51,5 @@ func main() {
 	log.SetOutput(file)
 	// Set up config
 	conf.LoadConfig("config.json")
-
 	startListening("1")
 }

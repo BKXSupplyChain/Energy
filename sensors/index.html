@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
     <meta charset="UTF-8">
     <title>Sensor setup</title>
 </head>
 <body>
 <div align="center">
-    <form action="/login" method="POST">
+    <form action="/login" method="POST", id="login_form">
         <h3>Congratulations! Just answer questions below to complete setup:</h3>
       
         <p><input type="text" name="wifi_ssid" placeholder="WiFi SSID" maxlength="100"/></p>
@@ -14,8 +15,22 @@
         <p><input type="text" name="data_url" placeholder="Sending URL or IP" maxlength="100"/></p>
         <p><input type="text" name="data_port" placeholder="Sending port" maxlength="10"/></p>
         <p><input type="text" name="token" placeholder="Personal token" maxlength="512"/></p>
-        <input type="submit" value="Login">
+        <button type="button" onclick="checkConnection()">Login</button>
     </form>
 </div>
+
+<script>
+function checkConnection() {
+    $.ajax({
+        type: "post",
+        url: "http://192.168.4.1/login",
+        data: $('#login_form').serialize(),
+        success: function() {
+            alert("worked");
+        }
+    })
+}
+</script>
+
 </body>
 </html>
