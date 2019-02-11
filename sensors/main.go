@@ -10,6 +10,10 @@ import (
 	"github.com/BKXSupplyChain/Energy/utils"
 )
 
+func isExistsInDB(token string) bool {
+	return token == "abcde"
+}
+
 // Can be expended in many listeners
 func startListening(idx string) {
 	connStr := conf.GetServerIPAsString(idx) + ":" + conf.GetServerPortAsString(idx)
@@ -40,6 +44,11 @@ func handleRequest(conn net.Conn) {
 		}
 		log.Println("Number of bytes: ", len)
 		log.Println(string(buf[0:]))
+		if isExistsInDB(string(buf[0:])) {
+			conn.Write([]byte{1})
+		} else {
+			conn.Write([]byte{0})
+		}
 	}
 }
 
