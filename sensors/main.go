@@ -12,9 +12,9 @@ import (
 )
 
 type sensorPacket struct {
-	UserToken     string
-	NeighborToken string
-	Value         int64
+	UserToken     string `json:"user_token"`
+	NeighborToken string `json:"neighbor_token"`
+	Value         int64  `json:"voltage"`
 }
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
