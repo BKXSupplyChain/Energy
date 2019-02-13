@@ -29,3 +29,15 @@ func GetServerPort(idx string) int {
 func GetServerPortAsString(idx string) string {
 	return config.Get("servers", idx, "port").String("")
 }
+
+func GetMongoSensorsDatabase() string {
+	return config.Get("mongo", "sensors").String("")
+}
+
+func GetMongoMetricCollection() string {
+	return config.Get("mongo", "metric").String("")
+}
+
+func GetMongoConnectionString() string {
+	return config.Get("mongo", "connection_string").String("")
+}
