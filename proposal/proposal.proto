@@ -1,0 +1,15 @@
+syntax = "proto3";
+package proposal;
+
+import "google/protobuf/timestamp.proto";
+
+message Proposal {
+  string IP = 1;
+  int32 Price = 2;
+  int32 TotalCost = 3;
+  int32 DeltaPrice = 4;
+  int32 Salt = 5;  // secret code using between neighbours
+  int32 TTL = 6; 
+
+  google.protobuf.Timestamp last_updated = 7;
+}
