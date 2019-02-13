@@ -1,14 +1,8 @@
 package types
 
-import (
-	"net"
-
-	"github.com/globalsign/mgo/bson"
-)
-
-type SensorListener struct {
-	IP        []byte
-	Port      int
-	SensorsID []bson.ObjectId
-	TCPL      *net.TCPListener
+type SensorPacket struct {
+	UserToken     string `json:"user_token"`
+	NeighborToken string `json:"neighbor_token"`
+	Value         int64  `json:"voltage"`
+	Timestamp     int64
 }
