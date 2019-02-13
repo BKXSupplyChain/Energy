@@ -1,15 +1,17 @@
-#include <NTPClient.h>
 #include <assert.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
-#include <time.h>
 #include <ArduinoJson.h>
 
+extern "C" {
+#include "user_interface.h"
+}
+
 const char *credArgs[] = {"wifi_ssid", "wifi_pass", "data_url", "data_port", "user_token", "neighbor_token"};
-const int CNT_OF_ARGS = 6;
+const int CNT_OF_ARGS = 5;
 
 const char *AP_SSID = "ESP";
 const char *AP_PASS = "3.141592";
@@ -108,9 +110,14 @@ void handleRegistration() {
 }
 
 void saveCredentials(const char *filename, Credentials &cred) {
+    Serial.println(filename);
+    Serial.println("SPIFFS Open");
+    Serial.println(system_get_free_heap_size());
     File credFile = SPIFFS.open(filename, "w");
+    Serial.println("Credentials open!");
     StaticJsonBuffer<JSON_STACK_SIZE> jsonBuffer;
     JsonObject &root = jsonBuffer.createObject();
+    Serial.println("Arduino JSON!");
     for (int i = 0; i < CNT_OF_ARGS; ++i) {
         root[credArgs[i]] = cred.getArg(credArgs[i]);
     }
@@ -170,7 +177,6 @@ bool credentialsAreValid() {
     cred.neighborToken = server.arg("neighbor_token");
     Serial.println(cred.userToken);
     Serial.println(cred.neighborToken);
-
     sendDataToServer(cred.userToken + ":" + cred.neighborToken);
     if (getDataFromServer() != "OK") {
         Serial.println("Bad data");
@@ -187,21 +193,15 @@ void handleLogin() {
         return;
     }
     saveCredentials("/credentials.txt", mainCred);
+    Serial.println("Credentials saved!");
     server.send(200, "text/html", "<h1>Successfully!</h1>");
    // WiFi.softAPdisconnect(); // reset access point of ESP
-}
-
-unsigned int getTimestamp() {
-    time_t result = time(nullptr);
-    Serial.println(asctime(localtime(&result)));
-    return (unsigned int)result;
 }
 
 void setup() {
     Serial.begin(115200);
     SPIFFS.begin();
-    Serial.println(getTimestamp());
- 
+    
     WiFi.mode(WIFI_AP_STA);
     WiFi.disconnect(true);
     delay(100);
@@ -229,6 +229,7 @@ void setup() {
         Serial.println("Credentials exists!");
         loadCredentials("/credentials.txt", mainCred);
     }
+    return;
 }
 
 int readVoltage() {
@@ -236,9 +237,11 @@ int readVoltage() {
 }
 
 void loop() {
+    delay(100);
+    Serial.println("loop");
     if (mainCred.WiFiPASS != "") {
         tryToConnectWiFi(mainCred);
-        sendDataToServer(String(readVoltage()) + ":" + String(getTimestamp()));
+        sendDataToServer(String(readVoltage()));
         Serial.println(getDataFromServer());
     } else {
         server.handleClient();
