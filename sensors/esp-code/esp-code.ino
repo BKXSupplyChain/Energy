@@ -11,7 +11,7 @@ extern "C" {
 }
 
 const char *credArgs[] = {"wifi_ssid", "wifi_pass", "data_url", "data_port", "user_token", "neighbor_token"};
-const int CNT_OF_ARGS = 5;
+const int CNT_OF_ARGS = 6;
 
 const char *AP_SSID = "ESP";
 const char *AP_PASS = "3.141592";
@@ -19,7 +19,7 @@ const char *AP_PASS = "3.141592";
 const int WIFI_CONN_DELAY = 10000;
 const int SENDING_FRAME = 1000;
 const int CLIENT_CONN_DELAY = 1000;
-const int JSON_STACK_SIZE = 8192;
+const int JSON_STACK_SIZE = 300;
 
 struct Credentials {
     String WiFiSSID, WiFiPASS, dataURL, dataPort, userToken, neighborToken;
@@ -72,12 +72,11 @@ HTTPClient http;
 ESP8266WebServer server(80);
 
 String getDataFromServer() {
-    return http.getString();
+    return http.getString(); // return only first response, TO FIX
 }
 
-int sendDataToServer(const String& data) {
-    http.addHeader("Content-Type", "text/plain");
-    return http.POST(data.c_str()); // response code
+int sendDataToServer(const String& payload) {
+    return http.sendRequest("POST", payload);
 }
 
 bool tryToConnectWiFi(const Credentials &cred) {
@@ -104,7 +103,11 @@ bool tryToConnectServer(const Credentials &cred) {
 }
 
 void handleRegistration() {
+    Serial.println("Open index.html");
     File file = SPIFFS.open("/index.html", "r");
+    if (!file) {
+        Serial.println("Can't open!");
+    }
     server.streamFile(file, "text/html");
     file.close();
 }
@@ -131,6 +134,7 @@ void saveCredentials(const char *filename, Credentials &cred) {
 }
 
 void loadCredentials(const char *filename, Credentials &cred) {
+    
     File credFile = SPIFFS.open(filename, "r");
     StaticJsonBuffer<JSON_STACK_SIZE> jsonBuffer;
     JsonObject &root = jsonBuffer.parseObject(credFile);
@@ -146,7 +150,10 @@ void loadCredentials(const char *filename, Credentials &cred) {
     }
     Serial.println(cred.WiFiSSID);
     Serial.println(cred.WiFiPASS);
+    Serial.println(cred.dataURL);
+    Serial.println("File closing");
     credFile.close();
+    Serial.println("File closed");
 }
 
 Credentials mainCred;
@@ -177,10 +184,6 @@ bool credentialsAreValid() {
     cred.neighborToken = server.arg("neighbor_token");
     Serial.println(cred.userToken);
     Serial.println(cred.neighborToken);
-    sendDataToServer(cred.userToken + ":" + cred.neighborToken);
-    if (getDataFromServer() != "OK") {
-        Serial.println("Bad data");
-    }
     mainCred = cred;
     Serial.println("Data is valid!");
     return true;
@@ -192,7 +195,7 @@ void handleLogin() {
         Serial.println("Credentials not valid!");
         return;
     }
-    saveCredentials("/credentials.txt", mainCred);
+    saveCredentials("/credentials.json", mainCred);
     Serial.println("Credentials saved!");
     server.send(200, "text/html", "<h1>Successfully!</h1>");
    // WiFi.softAPdisconnect(); // reset access point of ESP
@@ -206,7 +209,7 @@ void setup() {
     WiFi.disconnect(true);
     delay(100);
   
-    if (!SPIFFS.exists("/credentials.txt")) {
+    if (!SPIFFS.exists("/credentials.json")) {
         Serial.println("Credentials file not found. Starting registration...");
         delay(100);
         Serial.println("Starting access point...");
@@ -227,8 +230,12 @@ void setup() {
         // Need to set up, TODO
     } else {
         Serial.println("Credentials exists!");
-        loadCredentials("/credentials.txt", mainCred);
+        loadCredentials("/credentials.json", mainCred);
+        Serial.println("Credentials loaded");
+        Serial.println("Connecting to server...");
+        Serial.println(tryToConnectServer(mainCred));
     }
+    Serial.println("RETURN");
     return;
 }
 
@@ -236,13 +243,30 @@ int readVoltage() {
     return 100;
 }
 
+String getData() {
+    StaticJsonBuffer<JSON_STACK_SIZE> jsonBuffer;
+    JsonObject &root = jsonBuffer.createObject();
+    root["voltage"] = readVoltage();
+    root["user_token"] = mainCred.userToken;
+    root["neighbor_token"] = mainCred.neighborToken;
+    String res;
+    root.printTo(res);
+    Serial.println(res);
+    return res;
+}
+
 void loop() {
-    delay(100);
-    Serial.println("loop");
+    delay(5000);
+    Serial.println("LOOP!");
     if (mainCred.WiFiPASS != "") {
         tryToConnectWiFi(mainCred);
-        sendDataToServer(String(readVoltage()));
-        Serial.println(getDataFromServer());
+        int responseCode = sendDataToServer(getData());
+        if (responseCode == -1) {
+            Serial.println("Connection refused"); 
+        } else {
+            Serial.println("Data sent");
+            Serial.println(getDataFromServer());
+        }
     } else {
         server.handleClient();
     }
