@@ -39,6 +39,7 @@ func handleRequest(conn net.Conn) {
 	for {
 		len, err := conn.Read(buf[0:])
 		if err != nil {
+			fmt.Println("Closing connection...")
 			log.Printf("Error: %s\n", err.Error())
 			return
 		}
