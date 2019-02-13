@@ -35,6 +35,8 @@ func recieveData(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	conf.LoadConfig("config.json")
+
 	mgoSession, err := mgo.Dial(conf.GetMongoConnectionString())
 	utils.CheckFatal(err)
 	defer mgoSession.Close()
