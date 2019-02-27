@@ -1,0 +1,19 @@
+import socket
+import time
+
+def tester(data):
+    add = 100
+    cntJo = 0
+    ID = data[:16]
+    print(ID)
+    Server = data[16:]
+    index = Server.rfind(':')
+    host = Server[:index]
+    port = (int)(Server[index + 1:])
+    sock = socket.socket()
+    sock.connect((host, port))
+    while (True):
+        sock.send([ID, cntJo])
+        cntJo = cntJo + add
+        time.sleep(120)
+    
