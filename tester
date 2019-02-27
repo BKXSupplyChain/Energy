@@ -1,19 +1,15 @@
-import socket
+import requests
+import json
 import time
 
-def tester(data):
+def tester(s):
     add = 100
     cntJo = 0
-    ID = data[:16]
-    print(ID)
-    Server = data[16:]
-    index = Server.rfind(':')
-    host = Server[:index]
-    port = (int)(Server[index + 1:])
-    sock = socket.socket()
-    sock.connect((host, port))
+    identification = s[:16]
+    URL = s[16:]
     while (True):
-        sock.send([ID, cntJo])
+        payload = {'ID': identification, 'CntOfJoules': cntJo}
+        print(payload)
+        r = requests.post(URL, data = json.dumps(payload))
         cntJo = cntJo + add
         time.sleep(120)
-    
