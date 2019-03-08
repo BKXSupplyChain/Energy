@@ -10,4 +10,5 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -o sensors .
 FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /go/src/github.com/BKXSupplyChain/Energy/sensors/sensors .
+COPY --from=builder /go/src/github.com/BKXSupplyChain/Energy/sensors/config.json .
 CMD ["./sensors"]

@@ -8,26 +8,10 @@ import (
 )
 
 func LoadConfig(path string) {
-	config.Load(file.NewSource(
+	err := config.Load(file.NewSource(
 		file.WithPath(path),
 	))
-}
-
-func GetServerIPAsString(idx string) string {
-	return config.Get("servers", idx, "ip").String("")
-}
-
-func GetServerIP(idx string) []byte {
-	IPStr := GetServerIPAsString(idx)
-	return utils.ConvertIPToBytes(IPStr)
-}
-
-func GetServerPort(idx string) int {
-	return config.Get("servers", idx, "port").Int(0)
-}
-
-func GetServerPortAsString(idx string) string {
-	return config.Get("servers", idx, "port").String("")
+	utils.CheckFatal(err)
 }
 
 func GetMongoSensorsDatabase() string {

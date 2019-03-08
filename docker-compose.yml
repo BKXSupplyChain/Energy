@@ -3,13 +3,17 @@ services:
   mongo:
     image: 'mongo'
     ports:
-    - '27017:27017'
+    - "27017:27017"
+
   sensors:
     build:
       context: .
       dockerfile: sensors/Dockerfile
     depends_on:
     - mongo
+    restart: on-failure
+    ports:
+    - "1000:1000"
     links:
       - mongo
     restart: on-failure

@@ -39,9 +39,8 @@ func main() {
 	conf.LoadConfig("config.json")
 	var err error
 	log.Println("Config loaded")
+	log.Println("connecting to ", conf.GetMongoConnectionString())
 	mgoSession, err = mgo.Dial("mongodb://mongo:27017") // MUST BE MOVED TO DB
-	log.Println(conf.GetMongoConnectionString()) // IS EMPTY! REPLACE CONFIG SYSTEM!
-	//mgoSession, err = mgo.Dial(conf.GetMongoConnectionString())
 	utils.CheckFatal(err)
 	log.Println("DB connected")
 	defer mgoSession.Close()
