@@ -35,10 +35,15 @@ func recieveData(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.Println("Starting sensors")
 	conf.LoadConfig("config.json")
 	var err error
-	mgoSession, err = mgo.Dial(conf.GetMongoConnectionString())
+	log.Println("Config loaded")
+	mgoSession, err = mgo.Dial("mongodb://mongo:27017") // MUST BE MOVED TO DB
+	log.Println(conf.GetMongoConnectionString()) // IS EMPTY! REPLACE CONFIG SYSTEM!
+	//mgoSession, err = mgo.Dial(conf.GetMongoConnectionString())
 	utils.CheckFatal(err)
+	log.Println("DB connected")
 	defer mgoSession.Close()
 
 	http.HandleFunc("/", recieveData)       // set router
