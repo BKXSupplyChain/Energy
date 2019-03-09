@@ -28,7 +28,6 @@
 
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
             width: 25px;
             height: 25px;
             background: #4CAF50;
@@ -44,48 +43,52 @@
     </style>
 </head>
 <body>
-<table class="label">
-    <tr>
-        <td>Power:</td><td id="powerL">100</td>
-    </tr>
-    <tr>
-        <td>Total:</td><td id="totalL"> 0 </td>
-    </tr>
-</table>
+    <table class="label">
+        <tr>
+            <td>Token:</td><td id="tokenL"></td>
+        </tr>
+        <tr>
+            <td>Power:</td><td id="powerL">100</td>
+        </tr>
+        <tr>
+            <td>Total:</td><td id="totalL"> 0 </td>
+        </tr>
+    </table>
 
-<div class="slidecontainer">
-    <input type="range" min="0" max="200" value="100" id="powerI" class="slider">
-</div>
+    <div class="slidecontainer">
+        <input type="range" min="0" max="200" value="100" id="powerI" class="slider">
+    </div>
 
-<script>
-    var powerI = document.getElementById("powerI")
-    var powerL = document.getElementById("powerL")
-    var totalL = document.getElementById("totalL")
-    var lastSend
-    var total = 0
-    var serverAddr, sensorID
+    <script>
+        var powerI = document.getElementById("powerI");
+        var powerL = document.getElementById("powerL");
+        var totalL = document.getElementById("totalL");
+        var lastSend;
+        var total = 0;
+        var serverAddr, sensorID;
 
-    token = prompt('Enter token:')
-    sensorID = token.substr(0, 16)
-    serverAddr = token.substr(16)
-    lastSend = Date.now()
+        token = prompt('Enter token:');
+        sensorID = token.substr(0, 16);
+        serverAddr = token.substr(16);
+        lastSend = Date.now();
+        document.getElementById("tokenL").innerText = token;
 
-    powerI.oninput = function () {
-        powerL.innerHTML = powerI.value
-    }
+        powerI.oninput = function () {
+            powerL.innerHTML = powerI.value
+        };
+        
+        function commit() {
+            var now = Date.now();
+            total += (now - lastSend) * powerI.value / 1000;
+            totalL.innerText = Math.round(total);
+            lastSend = now;
 
-    function commit() {
-        var now = Date.now()
-        total += (now - lastSend) * powerI.value / 1000
-        totalL.innerText = Math.round(total)
-        lastSend = now
+            var req = new XMLHttpRequest();
+            req.open('post', serverAddr, true);
+            req.send(JSON.stringify({'total' : total, 'sensorID' : sensorID}));
+        }
 
-        var req = new XMLHttpRequest()
-        req.open('post', serverAddr, true)
-        req.send(JSON.stringify({'total' : total, 'sensorID' : sensorID}))
-    }
-
-    setInterval(commit, 2500)
-</script>
+        setInterval(commit, 2000)
+    </script>
 </body>
 </html>

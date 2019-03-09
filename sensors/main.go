@@ -12,10 +12,7 @@ import (
 	"github.com/BKXSupplyChain/Energy/sensors/conf"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
-	"github.com/globalsign/mgo"
 )
-
-var mgoSession *mgo.Session
 
 func recieveData(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -30,7 +27,7 @@ func recieveData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pck.Timestamp = time.Now().Unix()
-	db.WriteSensorsPacket(mgoSession, &pck)
+	db.WriteSensorsPacket(&pck)
 	fmt.Fprintf(w, "OK") // send data to client side
 }
 
@@ -39,11 +36,9 @@ func main() {
 	conf.LoadConfig("config.json")
 	var err error
 	log.Println("Config loaded")
-	log.Println("connecting to ", conf.GetMongoConnectionString())
-	mgoSession, err = mgo.Dial("mongodb://mongo:27017") // MUST BE MOVED TO DB
+	err = db.DBCreateSession()
 	utils.CheckFatal(err)
-	log.Println("DB connected")
-	defer mgoSession.Close()
+	defer db.Close()
 
 	http.HandleFunc("/", recieveData)       // set router
 	err = http.ListenAndServe(":1000", nil) // set listen port

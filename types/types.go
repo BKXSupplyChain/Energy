@@ -1,8 +1,7 @@
 package types
 
 type SensorPacket struct {
-	UserToken     string `json:"user_token"`
-	NeighborToken string `json:"neighbor_token"`
-	Value         int64  `json:"voltage"`
-	Timestamp     int64
+	SensorID  string `json:"sensorID"`
+	Total     int64  `json:"total"`
+	Timestamp int64
 }
