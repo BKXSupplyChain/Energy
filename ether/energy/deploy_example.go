@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"math/big"
+	"time"
 
 	"./contracts"
 	"github.com/ethereum/go-ethereum/common"
@@ -26,16 +30,33 @@ func main() {
 	// Хэш: посмотри как он используется в самом контракте при разрыве или спроси у Артемия как его насчитать
 	random_datahash := new([32]byte)
 
-	// Получаем адрес контракта, который нужно сказать поставщику
+	// Получаем новый клиент подключенный к ноде.
+	client := contracts.CreateNewClient()
+
+	// Получаем адрес контракта, который нужно сказать поставщику.
 	address := contracts.DeployNewContract(random_supplier_address,
+		client,
 		random_end_time,
 		*random_datahash,
-		"https://rinkeby.infura.io/v3/c5035536f7a0467299308c86b3eb9dbc",
 		key,
 		"testaccountpassword")
 
-	// Чтобы go не ругался
-	address = address
+	// Вот так можно спросить баланс контракта, да и любого другого кошелька тоже.
+	balance, err := client.BalanceAt(context.Background(), address, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(balance)
 
-	// TODO: нужно положить по адресу контракта сумму, о которой договорились.
+	// Теперь вторая важная часть, вот у нас есть контракт, но денег то на нём нет.
+	// Поэтому мы туда и положим что-нибудь.
+
+	fmt.Printf("Sleep for 2 minutes while our contract is mining.\n")
+	time.Sleep(2 * time.Minute)
+
+	value := big.NewInt(100000000000000000) // 1 eth = 1000000000000000000
+	contracts.TransferEthToContract(client,
+		"65FAFAF36F6B6E9A8EAC009656A5CA6FA4980F72BB0300A176B3793391905125", // Приватный ключ кошелька.
+		value,
+		address)
 }
