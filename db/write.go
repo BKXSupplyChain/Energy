@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
 	"github.com/globalsign/mgo"
@@ -10,6 +11,7 @@ import (
 	"github.com/micro/go-config"
 	"log"
 	"math"
+	"math/big"
 )
 
 type TokenId bson.ObjectId
@@ -52,7 +54,7 @@ func WriteSensorsPacket(pck *types.SensorPacket) {
 //======== BACKEND ONLY ============
 
 func getMongoUsersCollection() string {
-	return config.Get("mongo", "sockets").String("sockets")
+	return config.Get("mongo", "users").String("users")
 }
 
 func b64ToObjectId(in string) bson.ObjectId {
@@ -91,6 +93,28 @@ func addUser(u *types.UserData) {
 	utils.CheckFatal(err)
 }
 
-func TokenInfo(t string) {
+func GetNewID() string {
+	return string(bson.NewObjectId())
+}
 
+func GetSocket(id string) types.SocketInfo {
+}
+
+func UpsertSocket(socInfo *types.SocketInfo, id string) { ///Update + (Insert if id missing)
+}
+
+func GetProposal(id string) types.Proposal {
+}
+
+func InsertProposal(socInfo *types.Proposal, id string) {
+}
+
+func ApplySertificate(contract string, amount big.Int, signature []byte) { ///Check everything yourself
+}
+
+func GetContract(id string) types.Contract {
+}
+
+func PutContract(con *types.Contract, id string) error { ///will also set in socket
+	return errors.New("ID Already Used") ///Could throw this error. Treat this as malicious neighbour
 }
