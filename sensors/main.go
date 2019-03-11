@@ -26,7 +26,7 @@ func recieveData(w http.ResponseWriter, r *http.Request) {
 		utils.CheckNotFatal(err)
 		return
 	}
-	pck.Timestamp = time.Now().Unix()
+	pck.Timestamp = time.Now().UnixNano()
 	db.WriteSensorsPacket(&pck)
 	fmt.Fprintf(w, "OK") // send data to client side
 }

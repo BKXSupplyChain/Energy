@@ -1,0 +1,8 @@
+{
+  "selfAddress" : "13.125.161.122",
+  "mongo": {
+    "connection_string": "mongodb://mongo:27017",
+    "sensors": "sensors",
+    "metric": "metric"
+  }
+}

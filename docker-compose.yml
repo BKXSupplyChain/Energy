@@ -11,9 +11,20 @@ services:
       dockerfile: sensors/Dockerfile
     depends_on:
     - mongo
-    restart: on-failure
     ports:
     - "1000:1000"
     links:
-      - mongo
+    - mongo
     restart: on-failure
+
+  backend:
+   build:
+     context: .
+     dockerfile: backend/Dockerfile
+   depends_on:
+   - mongo
+   ports:
+   - "80:80"
+   links:
+   - mongo
+   restart: on-failure

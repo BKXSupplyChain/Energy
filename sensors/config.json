@@ -1,10 +1,4 @@
 {
-    "servers": {
-        "1": {
-            "ip": "207.154.227.181",
-            "port": "1000"
-        }
-    },
     "mongo": {
         "connection_string": "mongodb://mongo:27017",
         "sensors": "sensors",
