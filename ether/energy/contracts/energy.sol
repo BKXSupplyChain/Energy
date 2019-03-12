@@ -6,7 +6,7 @@ contract Energy {
     uint public endTime;
     bytes32 public dataHash; // includes also supplier-generated salt
    
-    constructor(address payable _supplier, uint _endTime, bytes32 _dataHash) public {
+    constructor(address payable _supplier, uint _endTime, bytes32 _dataHash) public payable {
         consumer = msg.sender;
         supplier = _supplier;
         endTime = _endTime;
