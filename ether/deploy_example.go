@@ -16,7 +16,7 @@ func main() {
 	// Здесь нужно взять адрес поставщика
 	random_supplier_address := common.HexToAddress("0x71c7656ec7ab88b098defb751b7401b5f6d8976f")
 	// Время окончания
-	randomEndTime := new(big.Int)
+	randomEndTime := big.NewInt(0)
 	// Хэш: посмотри как он используется в самом контракте при разрыве или спроси у Артемия как его насчитать
 	randomDatahash := new([32]byte)
 	// Сумма, которую хотим положить в контракт.

@@ -27,13 +27,9 @@ func CreateNewClient() *ethclient.Client {
 	return client
 }
 
-// Returns an address of the new contract.
-func DeployNewContract(supplierAddress common.Address,
-	client *ethclient.Client,
-	endTime *big.Int,
-	datahash [32]byte,
+func GetAuth(client *ethclient.Client,
 	value *big.Int,
-	rawPrivateKey string) common.Address {
+	rawPrivateKey string) *bind.TransactOpts {
 
 	privateKey, err := crypto.HexToECDSA(rawPrivateKey)
 	if err != nil {
@@ -63,6 +59,19 @@ func DeployNewContract(supplierAddress common.Address,
 	auth.GasLimit = uint64(300000) // in units
 	auth.GasPrice = gasPrice
 
+	return auth
+}
+
+// Returns an address of the new contract.
+func DeployNewContract(supplierAddress common.Address,
+	client *ethclient.Client,
+	endTime *big.Int,
+	datahash [32]byte,
+	value *big.Int,
+	rawPrivateKey string) common.Address {
+
+	auth := GetAuth(client, value, rawPrivateKey)
+
 	address, tx, _, err := DeployEnergy(
 		auth,
 		client,
@@ -82,7 +91,52 @@ func DeployNewContract(supplierAddress common.Address,
 	return address
 }
 
-// Transfers money into the contract.
+// FinishExp api.
+func FinishExp(client *ethclient.Client,
+	address common.Address,
+	rawPrivateKey string) {
+
+	bigIntZero := big.NewInt(0)
+	auth := GetAuth(client, bigIntZero, rawPrivateKey)
+
+	contract, err := NewEnergy(address, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	contract.FinishExp(&bind.TransactOpts{
+		From:   auth.From,
+		Signer: auth.Signer,
+		Value:  nil,
+	})
+}
+
+// FinishSup api.
+func FinishSup(client *ethclient.Client,
+	address common.Address,
+	rawPrivateKey string,
+	supplierAddress common.Address,
+	amount *big.Int,
+	v uint8,
+	r [32]byte,
+	s [32]byte) {
+
+	bigIntZero := big.NewInt(0)
+	auth := GetAuth(client, bigIntZero, rawPrivateKey)
+
+	contract, err := NewEnergy(address, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	contract.FinishSup(&bind.TransactOpts{
+		From:   auth.From,
+		Signer: auth.Signer,
+		Value:  nil,
+	}, amount, v, r, s)
+}
+
+// Transfers money to the address.
 func TransferEthToContract(client *ethclient.Client,
 	raw_private_key string,
 	value *big.Int,
