@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -21,7 +20,6 @@ const eth_node_address = "https://rinkeby.infura.io/v3/c5035536f7a0467299308c86b
 func CreateNewClient() *ethclient.Client {
 	// connect to an ethereum node  hosted by infura
 	client, err := ethclient.Dial(eth_node_address)
-
 	if err != nil {
 		log.Fatalf("Unable to connect to network:%v\n", err)
 	}
@@ -30,26 +28,54 @@ func CreateNewClient() *ethclient.Client {
 }
 
 // Returns an address of the new contract.
-func DeployNewContract(supplier_address common.Address,
+func DeployNewContract(supplierAddress common.Address,
 	client *ethclient.Client,
-	end_time *big.Int,
+	endTime *big.Int,
 	datahash [32]byte,
-	account_key string,
-	account_pass string) common.Address {
+	value *big.Int,
+	rawPrivateKey string) common.Address {
 
-	// Get credentials for the account to charge for contract deployments
-	auth, err := bind.NewTransactor(strings.NewReader(account_key), account_pass)
-
+	privateKey, err := crypto.HexToECDSA(rawPrivateKey)
 	if err != nil {
-		log.Fatalf("Failed to create authorized transactor: %v", err)
+		log.Fatal(err)
 	}
-	address, _, _, _ := DeployEnergy(
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	auth := bind.NewKeyedTransactor(privateKey)
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = value
+	auth.GasLimit = uint64(300000) // in units
+	auth.GasPrice = gasPrice
+
+	address, tx, _, err := DeployEnergy(
 		auth,
 		client,
-		supplier_address,
-		end_time,
+		supplierAddress,
+		endTime,
 		datahash,
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// fmt.Println(tx.Hash().Hex()) // Deployment transaction.
+	_ = tx
 
 	fmt.Printf("Contract pending deploy: 0x%x\n", address)
 
@@ -81,7 +107,7 @@ func TransferEthToContract(client *ethclient.Client,
 		log.Fatal(err)
 	}
 
-	gasLimit := uint64(21000) // in units
+	gasLimit := uint64(210000) // in units
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
 		log.Fatal(err)
