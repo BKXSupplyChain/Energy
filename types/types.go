@@ -47,6 +47,5 @@ type UserData struct {
 	username     string
 	passwordHash [32]byte /// SHA25
 	Sockets      []string
-	PublicKey    rsa.PublicKey
 	PrivateKey   rsa.PrivateKey
 }

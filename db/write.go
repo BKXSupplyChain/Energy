@@ -1,9 +1,10 @@
 package db
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/gob"
 	"encoding/hex"
-	"errors"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
 	"github.com/globalsign/mgo"
@@ -11,10 +12,7 @@ import (
 	"github.com/micro/go-config"
 	"log"
 	"math"
-	"math/big"
 )
-
-type TokenId bson.ObjectId
 
 var session *mgo.Session
 
@@ -26,11 +24,16 @@ func getMongoMetricCollection() string {
 	return config.Get("mongo", "metric").String("metric")
 }
 
-func getMongoSocketsCollection() string {
-	return config.Get("mongo", "sockets").String("sockets")
+func getMongoGeneralCollection() string {
+	return config.Get("mongo", "general").String("general")
 }
 
 func DBCreateSession() (err error) {
+	gob.Register(&types.SocketInfo{})
+	gob.Register(&types.Proposal{})
+	gob.Register(&types.Contract{})
+	gob.Register(&types.UserData{})
+
 	addr := config.Get("mongo", "connection_string").String("")
 	log.Println("connecting to ", addr)
 	session, err = mgo.Dial(addr)
@@ -68,15 +71,15 @@ func objectIdToB64(in bson.ObjectId) string {
 }
 
 func ForgeToken(d *types.SocketInfo) string {
-	coll := session.DB(getMongoDatabase()).C(getMongoSocketsCollection())
+	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
 	var objectId bson.ObjectId = bson.NewObjectId()
 	utils.CheckFatal(coll.Insert(bson.M{"_id": objectId}, &d))
-	return objectId.Hex()
+	return string(objectId)
 }
 
-func TokenGetPower(t string) (power float32) {
+func TokenGetPower(id string) (power float32) {
 	sensColl := session.DB(getMongoDatabase()).C(getMongoMetricCollection())
-	sensQ := sensColl.Find(bson.M{"_id": bson.ObjectIdHex(t)}).Sort("-Timestamp").Limit(2).Iter()
+	sensQ := sensColl.Find(bson.M{"_id": bson.ObjectIdHex(id)}).Sort("-Timestamp").Limit(2).Iter()
 	var prevP, curP types.SensorPacket
 	sensQ.Next(&curP)
 	sensQ.Next(&prevP)
@@ -87,34 +90,35 @@ func TokenGetPower(t string) (power float32) {
 	}
 }
 
-func addUser(u *types.UserData) {
-	coll := session.DB(getMongoDatabase()).C(getMongoUsersCollection())
-	err := coll.Insert(&u)
-	utils.CheckFatal(err)
-}
-
 func GetNewID() string {
 	return string(bson.NewObjectId())
 }
 
-func GetSocket(id string) types.SocketInfo {
+type generalPacket struct {
+	ID bson.ObjectId `bson:"_id,omitempty"`
+	B  []byte
 }
 
-func UpsertSocket(socInfo *types.SocketInfo, id string) { ///Update + (Insert if id missing)
+func Add(obj *interface{}, id string) error {
+	var buff bytes.Buffer
+	gob.NewEncoder(&buff).Encode(obj)
+	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
+	return coll.Insert(bson.M{"_id": id, "b": buff.Bytes()})
 }
 
-func GetProposal(id string) types.Proposal {
+func Get(obj *interface{}, id string) (err error) {
+	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
+	var encoded generalPacket
+	err = coll.FindId(id).One(&encoded)
+	if err != nil {
+		return
+	}
+	return gob.NewDecoder(bytes.NewBuffer(encoded.B)).Decode(&obj)
 }
 
-func InsertProposal(socInfo *types.Proposal, id string) {
-}
-
-func ApplySertificate(contract string, amount big.Int, signature []byte) { ///Check everything yourself
-}
-
-func GetContract(id string) types.Contract {
-}
-
-func PutContract(con *types.Contract, id string) error { ///will also set in socket
-	return errors.New("ID Already Used") ///Could throw this error. Treat this as malicious neighbour
+func Upsert(obj *interface{}, id string) {
+	var buff bytes.Buffer
+	gob.NewEncoder(&buff).Encode(obj)
+	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
+	coll.UpsertId(id, bson.M{"$set": bson.M{"_id": id, "b": buff.Bytes()}})
 }
