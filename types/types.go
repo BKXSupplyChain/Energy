@@ -1,7 +1,6 @@
 package types
 
 import (
-	"crypto/rsa"
 	"math/big"
 )
 
@@ -18,7 +17,7 @@ type SocketInfo struct {
 	Owner          string
 	Alias          string
 	NeighborAddr   string
-	NeighborKey    rsa.PublicKey
+	NeighborKey    string
 	ActiveProposal string
 	ActiveContract string
 	Proposals      []string
@@ -44,8 +43,8 @@ type Contract struct {
 }
 
 type UserData struct {
-	username     string
-	passwordHash [32]byte /// SHA25
+	Username     string   ///ID is crc64(ECMA) of username
+	PasswordHash [32]byte /// SHA25
 	Sockets      []string
-	PrivateKey   rsa.PrivateKey
+	PrivateKey   string
 }

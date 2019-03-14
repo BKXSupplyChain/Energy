@@ -99,14 +99,14 @@ type generalPacket struct {
 	B  []byte
 }
 
-func Add(obj *interface{}, id string) error {
+func Add(obj interface{}, id string) error {
 	var buff bytes.Buffer
 	gob.NewEncoder(&buff).Encode(obj)
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
 	return coll.Insert(bson.M{"_id": id, "b": buff.Bytes()})
 }
 
-func Get(obj *interface{}, id string) (err error) {
+func Get(obj interface{}, id string) (err error) {
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
 	var encoded generalPacket
 	err = coll.FindId(id).One(&encoded)
@@ -116,7 +116,7 @@ func Get(obj *interface{}, id string) (err error) {
 	return gob.NewDecoder(bytes.NewBuffer(encoded.B)).Decode(&obj)
 }
 
-func Upsert(obj *interface{}, id string) {
+func Upsert(obj interface{}, id string) {
 	var buff bytes.Buffer
 	gob.NewEncoder(&buff).Encode(obj)
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
