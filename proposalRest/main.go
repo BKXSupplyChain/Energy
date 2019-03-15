@@ -9,9 +9,8 @@ import (
 
     "./types"
     "bytes"
-    "fmt"
-	"errors"
-	"github.com/BANKEX/go-primetrust/models"
+    //"fmt"
+	//"errors"
     "io/ioutil"
 )
 
@@ -83,8 +82,7 @@ func SendProposal(P types.Proposal) {
     jsonData := new(bytes.Buffer)
     json.NewEncoder(jsonData).Encode(proposals)
 
-    apiUrl := fmt.Sprintf("localhost:8000/proposals", _apiPrefix)
-    req, err := http.NewRequest("POST", apiUrl, jsonData)
+    req, err := http.NewRequest("POST", "localhost:8000/proposals", jsonData)
     req.Header.Set("Content-Type", "application/json")
 
     client := &http.Client{}
@@ -100,7 +98,7 @@ func SendProposal(P types.Proposal) {
       //return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))
     }
 
-    response := models.Contact{}
+    response := proposals
     if err := json.Unmarshal(body, &response); err != nil {
       //return nil, errors.New("unmarshal error")
     }
