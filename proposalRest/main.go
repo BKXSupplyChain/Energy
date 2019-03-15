@@ -9,6 +9,10 @@ import (
 
     "./types"
     "bytes"
+    "fmt"
+	"errors"
+	"github.com/BANKEX/go-primetrust/models"
+    "io/ioutil"
 )
 
 var proposals []types.Proposal
@@ -76,7 +80,32 @@ func UpdateProposal(w http.ResponseWriter, r *http.Request) {
 
 func SendProposal(P types.Proposal) {
     proposals = append(proposals, P)
-    //json.NewEncoder(w).Encode(proposals)
+    jsonData := new(bytes.Buffer)
+    json.NewEncoder(jsonData).Encode(proposals)
+
+    apiUrl := fmt.Sprintf("localhost:8000/proposals", _apiPrefix)
+    req, err := http.NewRequest("POST", apiUrl, jsonData)
+    req.Header.Set("Content-Type", "application/json")
+
+    client := &http.Client{}
+    res, err := client.Do(req)
+    if err != nil {
+      //return nil, err
+    }
+    defer res.Body.Close()
+
+    body, _ := ioutil.ReadAll(res.Body)
+
+    if res.StatusCode != http.StatusCreated {
+      //return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))
+    }
+
+    response := models.Contact{}
+    if err := json.Unmarshal(body, &response); err != nil {
+      //return nil, errors.New("unmarshal error")
+    }
+
+    //return &response, nil
 }
 
 func Init() *mux.Router {
@@ -99,7 +128,7 @@ func Init() *mux.Router {
 }
 
 func main() {
-    Init()
+    go Init()
     newprop := types.Proposal{ID: "1.0.0.3",
                                                  Supplier : "A",
                                                  Consumer : "B", 
