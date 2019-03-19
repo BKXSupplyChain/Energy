@@ -23,7 +23,7 @@ type SocketInfo struct {
 type Proposal struct {
 	From  string
 	To    string
-	Price float64
+	Price big.Int
 	Salt  [4]byte
 	TTL   uint64 ///seconds
 }
