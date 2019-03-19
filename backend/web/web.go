@@ -7,6 +7,7 @@ import (
 	"github.com/BKXSupplyChain/Energy/db"
 	"github.com/BKXSupplyChain/Energy/types"
 	"hash/crc64"
+	"log"
 	"net/http"
 	"time"
 )
@@ -32,12 +33,13 @@ func getUser(name string, password string) (types.UserData, error) {
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
 	var user types.UserData
-	user.Username = r.Header.Get("username")
+	r.ParseForm()
+	user.Username = r.Form.Get("username")
 	id := make([]byte, 8)
 	binary.LittleEndian.PutUint64(id, crc64.Checksum([]byte(user.Username), crc64.MakeTable(crc64.ECMA)))
-	user.PasswordHash = sha256.Sum256([]byte(r.Header.Get("password")))
-	user.PrivateKey = r.Header.Get("privkey")
-
+	user.PasswordHash = sha256.Sum256([]byte(r.Form.Get("password")))
+	user.PrivateKey = r.Form.Get("privkey")
+	log.Println(r.Header)
 	if db.Add(&user, string(id)) != nil {
 		w.Header().Add("err", "Username is reserved")
 		http.Redirect(w, r, "/register", 307)
@@ -49,17 +51,17 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "password",
-		Value:   string(user.PasswordHash[:]),
+		Value:   r.Form.Get("password"),
 		Expires: time.Now().AddDate(0, 0, 1),
 	})
 	http.Redirect(w, r, "/main", 307)
 }
 
 func registerPage(w http.ResponseWriter, r *http.Request) {
+	serveFile("./web/static/register.html")(w, r)
 	if r.Header.Get("err") != "" {
 		w.Write([]byte("<div class=\"err\">" + r.Header.Get("err") + "</div>"))
 	}
-	serveFile("./web/static/register.html")(w, r)
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {

@@ -1,9 +1,5 @@
 package types
 
-import (
-	"math/big"
-)
-
 type SensorPacket struct {
 	SensorID  string `json:"sensorID"`
 	Total     uint64 `json:"total"`
@@ -34,17 +30,17 @@ type Proposal struct {
 
 type Contract struct {
 	LastSertificate struct {
-		Amount    big.Int
+		Amount    [32]byte
 		Signature string
 	}
 	EthAddress  string
-	TotalAmount big.Int
+	TotalAmount [32]byte
 	Socket      string
 }
 
 type UserData struct {
 	Username     string   ///ID is crc64(ECMA) of username
-	PasswordHash [32]byte /// SHA25
+	PasswordHash [32]byte /// SHA256
 	Sockets      []string
 	PrivateKey   string
 }

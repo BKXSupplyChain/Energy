@@ -5,11 +5,11 @@
 <body>
 
 <h1>Register</h1>
-    <div class="formdiv"><form action="register/impl">
+    <div class="formdiv"><form action="register/impl" method="post">
         Username:<br />
-        <input name="username" type="text" class="textinput"/>
+        <input name="username" type="text" class="textinput" autocomplete="username"/>
         <br /> Password:<br />
-        <input name="password" type="password" class="textinput" /><br />
+        <input name="password" type="password" class="textinput" autocomplete="new-password" /><br />
         Ethereum private key:<br />
         <input name="privkey" type="text" class="textinput" /><br />
         <input type="submit" value="register" style="width: 45%"/><a href=""><input type="button" value="sign in" style="width: 45%"></a>
