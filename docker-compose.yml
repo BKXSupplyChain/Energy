@@ -28,3 +28,8 @@ services:
    links:
    - mongo
    restart: on-failure
+
+  mongo-express:
+   image: "mongo-express"
+   ports:
+   - "90:8081"
