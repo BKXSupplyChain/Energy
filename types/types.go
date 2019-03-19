@@ -1,9 +1,6 @@
 package types
 
-import (
-	"crypto/rsa"
-	"math/big"
-)
+import "math/big"
 
 type SensorPacket struct {
 	SensorID  string `json:"sensorID"`
@@ -18,7 +15,7 @@ type SocketInfo struct {
 	Owner          string
 	Alias          string
 	NeighborAddr   string
-	NeighborKey    rsa.PublicKey
+	NeighborKey    string
 	ActiveProposal string
 	ActiveContract string
 	Proposals      []string
@@ -28,24 +25,24 @@ type SocketInfo struct {
 type Proposal struct {
 	From  string
 	To    string
-	Price float64
+	Price big.Int
 	Salt  [4]byte
 	TTL   uint64 ///seconds
 }
 
 type Contract struct {
 	LastSertificate struct {
-		Amount    big.Int
+		Amount    [32]byte
 		Signature string
 	}
 	EthAddress  string
-	TotalAmount big.Int
+	TotalAmount [32]byte
 	Socket      string
 }
 
 type UserData struct {
-	username     string
-	passwordHash [32]byte /// SHA25
+	Username     string   ///ID is crc64(ECMA) of username
+	PasswordHash [32]byte /// SHA256
 	Sockets      []string
-	PrivateKey   rsa.PrivateKey
+	PrivateKey   string
 }

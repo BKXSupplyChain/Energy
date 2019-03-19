@@ -1,7 +1,6 @@
 package db
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/hex"
@@ -79,7 +78,7 @@ func ForgeToken(d *types.SocketInfo) string {
 
 func TokenGetPower(id string) (power float32) {
 	sensColl := session.DB(getMongoDatabase()).C(getMongoMetricCollection())
-	sensQ := sensColl.Find(bson.M{"_id": bson.ObjectIdHex(id)}).Sort("-Timestamp").Limit(2).Iter()
+	sensQ := sensColl.Find(bson.M{"sensorID": bson.ObjectIdHex(id)}).Sort("-Timestamp").Limit(2).Iter()
 	var prevP, curP types.SensorPacket
 	sensQ.Next(&curP)
 	sensQ.Next(&prevP)
@@ -94,31 +93,25 @@ func GetNewID() string {
 	return string(bson.NewObjectId())
 }
 
-type generalPacket struct {
-	ID bson.ObjectId `bson:"_id,omitempty"`
-	B  []byte
+func Add(obj interface{}, id string) error {
+	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
+	log.Println(coll.Name, " -> ", id, " ", obj)
+	return coll.Insert(bson.M{"_id": id}, obj)
 }
 
-func Add(obj *interface{}, id string) error {
-	var buff bytes.Buffer
-	gob.NewEncoder(&buff).Encode(obj)
+func Get(obj interface{}, id string) (err error) {
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	return coll.Insert(bson.M{"_id": id, "b": buff.Bytes()})
+	return coll.FindId(id).One(&obj)
 }
 
-func Get(obj *interface{}, id string) (err error) {
+func Upsert(obj interface{}, id string) {
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	var encoded generalPacket
-	err = coll.FindId(id).One(&encoded)
-	if err != nil {
-		return
-	}
-	return gob.NewDecoder(bytes.NewBuffer(encoded.B)).Decode(&obj)
+	coll.UpsertId(id, bson.M{"$set": obj})
 }
 
-func Upsert(obj *interface{}, id string) {
-	var buff bytes.Buffer
-	gob.NewEncoder(&buff).Encode(obj)
-	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	coll.UpsertId(id, bson.M{"$set": bson.M{"_id": id, "b": buff.Bytes()}})
+func getEnergy(SocketID string) uint64 {
+	sensColl := session.DB(getMongoDatabase()).C(getMongoMetricCollection())
+	var pac types.SensorPacket
+	sensColl.Find(bson.M{"sensorID": bson.ObjectIdHex(SocketID)}).Sort("-Timestamp").One(&pac)
+	return pac.Total
 }
