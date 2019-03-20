@@ -1,6 +1,7 @@
 package types
 
 import "math/big"
+import "time"
 
 type SensorPacket struct {
 	SensorID  string `json:"sensorID"`
@@ -26,6 +27,11 @@ type Proposal struct {
 	From  string
 	To    string
 	Price big.Int
+	TotalAmount big.Int
+	BeginDate time
+	EndDate time
+	RelError uint16
+	AbsError big.Int
 	Salt  [4]byte
 	TTL   uint64 ///seconds
 }
