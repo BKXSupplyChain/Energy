@@ -1,7 +1,6 @@
 package types
 
 import "math/big"
-import "time"
 
 type SensorPacket struct {
 	SensorID  string `json:"sensorID"`
