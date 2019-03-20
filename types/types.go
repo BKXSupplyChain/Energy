@@ -26,13 +26,10 @@ type SocketInfo struct {
 type Proposal struct {
 	From  string
 	To    string
-	Price big.Int
+	Price uint64
 	TotalAmount big.Int
-	BeginDate time
-	EndDate time
 	RelError uint16
 	AbsError big.Int
-	Salt  [4]byte
 	TTL   uint64 ///seconds
 }
 
