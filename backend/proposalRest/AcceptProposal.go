@@ -11,7 +11,7 @@ import (
 )
 
 
-func AcceptProposal(hexAddrConsemer string, hexAddrSupplier string, endTime int32, value int32) {
+func AcceptProposal(hexAddrConsemer string, hexAddrSupplier string, endTime int32, value int32, datahash string) {
     // Завершаем старый контракт:
 	// Для вызова FinishSup всё то же самое, только нужно передать чуть больше аргументов в сам вызов.
 
@@ -41,8 +41,6 @@ func AcceptProposal(hexAddrConsemer string, hexAddrSupplier string, endTime int3
 	// Здесь нужно взять адрес поставщика
 	supplier_address := common.HexToAddress(hexAddrSupplier)
 	// Время окончания
-	// Хэш: посмотри как он используется в самом контракте при разрыве или спроси у Артемия как его насчитать
-	randomDatahash := new([32]byte)
 	// Приватный ключ от кошелька потребителя.
 	rawPrivateKey := "65FAFAF36F6B6E9A8EAC009656A5CA6FA4980F72BB0300A176B3793391905125"
 
@@ -53,7 +51,7 @@ func AcceptProposal(hexAddrConsemer string, hexAddrSupplier string, endTime int3
 	address := contracts.DeployNewContract(supplier_address,
 		client,
 		endTime,
-		*randomDatahash,
+		*datahash,
 		value,
 		rawPrivateKey)
 
