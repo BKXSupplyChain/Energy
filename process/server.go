@@ -17,9 +17,9 @@ func main() {
          log.Fatalf("Error of format of CertificatedPair: %s", err)
     }
     rpc.HandleHTTP()
-    listener,err = net.Listen("tcp", ":8080")
+    listener,err = net.Listen("tcp", ":30")
     if (err != nil) {
-          log.Fatalf("Can't listen on port 8080: %s", err)
+          log.Fatalf("Can't listen on port 30: %s", err)
     }
     err = http.Serve(listener, nil)
     if (err != nil) {
