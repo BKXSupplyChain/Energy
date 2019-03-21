@@ -7,7 +7,7 @@ import (
     "net/http"
     "time"
 
-    "github.com/BKXSupplyChain/Energy/backend/proposalRest/types"
+    "github.com/BKXSupplyChain/Energy/types"
     //"bytes"
     "fmt"
 	//"errors"
