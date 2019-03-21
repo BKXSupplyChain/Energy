@@ -8,15 +8,27 @@ import (
     "time"
 
     "github.com/BKXSupplyChain/Energy/types"
+    "github.com/BKXSupplyChain/Energy/db"
     //"bytes"
     "fmt"
 	//"errors"
     //"io/ioutil"
     "os/exec"
+    "crypto/md5"
+    "encoding/hex"
 )
 
 var proposals []types.Proposal
 
+
+func GetSocketHash(From string, To string) string {
+    concat := fmt.Sprintf("%s%s", From, To)
+    hasher := md5.New()
+    hasher.Write([]byte(concat))
+    socketHash := hex.EncodeToString(hasher.Sum(nil))
+    socketHash = socketHash[:12]
+    return socketHash
+}
 
 //---------------------------------
 //     REST METHODS
@@ -24,16 +36,17 @@ var proposals []types.Proposal
 
 func CreateProposal(w http.ResponseWriter, r *http.Request) {
     params := mux.Vars(r)
-    uuid, err := exec.Command("uuidgen").Output()
-    if err != nil {
-        log.Fatal(err)
-    }
-    params["ID"] = uuid
     var prop types.Proposal
     _ = json.NewDecoder(r.Body).Decode(&prop)
     prop.ID = params["ID"]
     proposals = append(proposals, prop)
     json.NewEncoder(w).Encode(proposals)
+
+    socketID := GetSocketHash(prop.From, prop.To)
+    var socket types.SocketInfo
+    db.Get(&socket, socketID)
+    socket.proposals = append(socket.proposals, prop)
+    db.Upsert(&socket, socketID)
 }
 
 func DeleteProposal(w http.ResponseWriter, r *http.Request) {
