@@ -7,11 +7,12 @@ import (
     "net/http"
     "time"
 
-    "github.com/BKXSupplyChain/Energy/backend/proposalRest/types"
+    "github.com/BKXSupplyChain/Energy/types"
     //"bytes"
     "fmt"
 	//"errors"
     //"io/ioutil"
+    "os/exec"
 )
 
 var proposals []types.Proposal
@@ -23,6 +24,11 @@ var proposals []types.Proposal
 
 func CreateProposal(w http.ResponseWriter, r *http.Request) {
     params := mux.Vars(r)
+    uuid, err := exec.Command("uuidgen").Output()
+    if err != nil {
+        log.Fatal(err)
+    }
+    params["ID"] = uuid
     var prop types.Proposal
     _ = json.NewDecoder(r.Body).Decode(&prop)
     prop.ID = params["ID"]

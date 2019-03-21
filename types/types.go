@@ -23,6 +23,7 @@ type SocketInfo struct {
 }
 
 type Proposal struct {
+	ID    string
 	From  string
 	To    string
 	Price uint64
