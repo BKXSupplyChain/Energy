@@ -46,37 +46,59 @@ func provider(socketID string, userID string) {
 	var absError big.Int = curentProposal.AbsError
 	var relError uint16 = curentProposal.RelError
 
+
 	var delta big.Int
-	delta.Neg(amountWant, amountGet)
-	delta = big.Int.Abs(delta) //TODO ABS???
+	delta.Sub(amountWant, amountGet)
+	var absDelta big.Int
+	absDelta.Abs(&delta)
 
 
 
 	if (valid) {
-		if (delta.Cmp(absError) <= 0 and //TODO relError) {
-			//TODO Update Base
+		if (delta.Cmp(absError) <= 0 ) { //TODO relError) {
+
+			var signature string = r.String() + " " + s.String()
+
+			contract.LastSertificate.Signature = signature
+			contract.LastSertificate.Amount = //TODO convert Big.Int to byte[32]
+
 		} else {
-		client := contracts.CreateNewClient()
 
-		// Достаём адрес контракта.
-		address := common.HexToAddress(contract.EthAddress)
+			socket.ActiveProposal = ""
 
-		// Приватный ключ для подписи вызова.
-		rawPrivateKey := //TODO WHETE GET IT?
+			client := contracts.CreateNewClient()
 
-		//TODO get last certificate
-		contracts.FinishSup(client, address, rawPrivateKey, //TODO Others params)
+			// Достаём адрес контракта.
+			address := common.HexToAddress(contract.EthAddress)
 
-		fmt.Printf("Waiting for a minute while our finish call is deploying.\n")
-		time.Sleep(time.Minute)
+			// Приватный ключ для подписи вызова.
+			rawPrivateKey := "65FAFAF36F6B6E9A8EAC009656A5CA6FA4980F72BB0300A176B3793391905125" //TODO WHETE GET IT?
 
-		// Проверяем, что денег на контракте не осталось.
-		balance, err := client.BalanceAt(context.Background(), address, nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(balance)
+			// Получаем последний сертификат
+			var err bool
+			strPair := strings.Split(contract.LastSertificate.Signature, " ")
+			r, err = r.SetString(strPair[0], 10)
+			if !err {
+				//error
+			}
+			s, err = s.SetString(strPair[1], 10)
+			if !err {
+				//error
+			}
+
+			contracts.FinishSup(client, address, rawPrivateKey, //TODO (amount) , HexToECDSA(socket.NeighborKey),  r, s)
+
+			fmt.Printf("Waiting for a minute while our finish call is deploying.\n")
+			time.Sleep(time.Minute)
+
+			// Проверяем, что денег на контракте не осталось.
+			balance, err := client.BalanceAt(context.Background(), address, nil)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(balance)
 		}
 	}
 
 }
+
