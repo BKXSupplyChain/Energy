@@ -12,6 +12,9 @@ import (
 	"time"
 	"math/big"
 	"strconv"
+	"fmt"
+	"os/exec"
+	"strings"
 )
 
 func serveFile(path string) func(w http.ResponseWriter, r *http.Request) {
@@ -74,24 +77,57 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	var proposal types.Proposal
 	r.ParseForm()
 	proposal.To = r.Form.Get("neighaddress")
-	proposal.Price = new(big.Int)
-	proposal.Price.SetString(r.Form.Get("price"), 10)
-	proposal.RelError = strconv.ParseUint(r.Form.Get("relerror"), 10, 16)
-	proposal.AbsError = new(big.Int)
-	proposal.AbsError.SetString(r.Form.Get("abserror"), 10)
-	proposal.TTL = strconv.ParseUint(r.Form.Get("durability"), 10, 64)
-	proposal.TotalAmount = new(big.Int)
-	proposal.TotalAmount.SetString(r.Form.Get("amount"), 10)
-	username = r.Cookie("username")
+	i, err := strconv.ParseUint(r.Form.Get("price"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	proposal.Price = uint64(i)
+	i, err = strconv.ParseUint(r.Form.Get("relerror"), 10, 16)
+	if err != nil {
+		log.Fatal(err)
+	}
+	proposal.RelError = uint16(i)
+	bigI := new(big.Int)
+	bigI, errs := bigI.SetString(r.Form.Get("abserror"), 10)
+	proposal.AbsError = *bigI
+	if errs {
+		log.Fatal(errs)
+	}
+	i, err = strconv.ParseUint(r.Form.Get("durability"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	proposal.TTL = uint64(i)
+	bigI = new(big.Int)
+	bigI, errs = bigI.SetString(r.Form.Get("amount"), 10)
+	proposal.TotalAmount = *bigI
+	if errs {
+		log.Fatal(err)
+	}
+	var username http.Cookie
+	for _, cookie := range r.Cookies() {
+		if (cookie.Name == "username") {
+			username := cookie
+			break
+		}
+	}
 	id := make([]byte, 8)
-	binary.LittleEndian.PutUint64(id, crc64.Checksum([]byte(username), crc64.MakeTable(crc64.ECMA)))
-	if db.Add(&proposal, id) != nil { // здесь я не разобрался пока
+	binary.LittleEndian.PutUint64(id, crc64.Checksum([]byte(username.Value), crc64.MakeTable(crc64.ECMA)))
+	if db.Add(&proposal, string(id)) != nil { // здесь я не разобрался пока
 		log.Println("Failed to add propose")
 	}
-	resp, err := http.Post("localhost:8000", &proposal)
+
+	uuid, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	proposal.ID = fmt.Sprintf("%x.%x.%x.%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:]);
+
+	resp, err := http.Post("localhost:8000", "data", strings.NewReader(proposal))
 	if err != nil {
 		log.Println("Can't send propose")
 	}
+	defer resp.Body.Close()
 	http.Redirect(w, r, "main", 307)
 }
 
