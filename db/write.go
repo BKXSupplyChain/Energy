@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/base64"
-	"encoding/gob"
 	"encoding/hex"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
@@ -28,11 +27,6 @@ func getMongoGeneralCollection() string {
 }
 
 func DBCreateSession() (err error) {
-	gob.Register(&types.SocketInfo{})
-	gob.Register(&types.Proposal{})
-	gob.Register(&types.Contract{})
-	gob.Register(&types.UserData{})
-
 	addr := config.Get("mongo", "connection_string").String("")
 	log.Println("connecting to ", addr)
 	session, err = mgo.Dial(addr)
@@ -76,12 +70,13 @@ func ForgeToken(d *types.SocketInfo) string {
 	return string(objectId)
 }
 
-func TokenGetPower(id string) (power float32) {
+func TokenGetPower(id string, fromTime int64) (power float32) {
 	sensColl := session.DB(getMongoDatabase()).C(getMongoMetricCollection())
-	sensQ := sensColl.Find(bson.M{"sensorID": bson.ObjectIdHex(id)}).Sort("-Timestamp").Limit(2).Iter()
+	sensQ := sensColl.Find(bson.M{"sensorID": bson.ObjectIdHex(id), "Timestamp": bson.M{"$gt": fromTime * 1e6}}).Sort("-Timestamp").Limit(2).Iter()
 	var prevP, curP types.SensorPacket
-	sensQ.Next(&curP)
-	sensQ.Next(&prevP)
+	if !sensQ.Next(&curP) || !sensQ.Next(&prevP) {
+		return 0
+	}
 	if curP.Timestamp != prevP.Timestamp {
 		return float32(curP.Total-prevP.Total) / float32(curP.Timestamp-prevP.Timestamp) * 1e9
 	} else {

@@ -28,9 +28,9 @@ type Proposal struct {
 	ID    string
 	Price uint64
 	TotalAmount big.Int
-	RelError uint16
-	AbsError big.Int
-	TTL   uint64 ///seconds
+	RelError    uint16
+	AbsError    big.Int
+	TTL         uint64 ///seconds
 }
 
 type Contract struct {
@@ -48,4 +48,17 @@ type UserData struct {
 	PasswordHash [32]byte /// SHA256
 	Sockets      []string
 	PrivateKey   string
+}
+
+type Certificate struct {
+	r              *big.Int
+	s              *big.Int
+	Amount         *big.Int
+	ActiveContract string
+}
+
+type ProposalMessage struct {
+	UserPublicKey      string
+	Proposal           Proposal
+	NeighbourPublicKey string
 }
