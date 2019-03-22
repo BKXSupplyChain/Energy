@@ -11,7 +11,7 @@ import (
 )
 
 func AddInDatabase(proposal types.Proposal)  {
-    db.Add(proposal, proposal.ID) //TODO ask about ID
+    db.Add(proposal, proposal.ID)
 }
 
 func updateSocket(proposal types.Proposal, userPublicKey /*TODO type */, NeighbourPublicKey /*TODO type*/) {
@@ -23,7 +23,7 @@ func updateSocket(proposal types.Proposal, userPublicKey /*TODO type */, Neighbo
 }
 
 func (t *types.Proposal) OnProposalReceived(proposal types.Proposal) {
-    putInDb(proposal)
+    AddInDatabase(proposal)
     updateSocket(proposal, /*TODO key*/, /*TODO key*/)
 }
 
