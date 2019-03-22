@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/BKXSupplyChain/Energy/db"
 	"github.com/BKXSupplyChain/Energy/types"
+	"github.com/BKXSupplyChain/Energy/process"
 	"hash/crc64"
 	"log"
 	"net/http"
@@ -103,15 +104,12 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	if errs {
 		log.Fatal(err)
 	}
-	var username http.Cookie
-	for _, cookie := range r.Cookies() {
-		if (cookie.Name == "username") {
-			username = *cookie
-			break
-		}
+	user, err := getUser(r)
+	if err != nil {
+		log.Fatal(err)
 	}
 	id := make([]byte, 8)
-	binary.LittleEndian.PutUint64(id, crc64.Checksum([]byte(username.Value), crc64.MakeTable(crc64.ECMA)))
+	binary.LittleEndian.PutUint64(id, crc64.Checksum([]byte(user.Username), crc64.MakeTable(crc64.ECMA)))
 	if db.Add(&proposal, string(id)) != nil { // здесь я не разобрался пока
 		log.Println("Failed to add propose")
 	}
@@ -119,8 +117,9 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	proposal.ID = fmt.Sprintf("%x.%x.%x.%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:]);
-	SendProposal(proposal)
+	proposal.ID = string(id)
+	//proposal.ID = fmt.Sprintf("%x.%x.%x.%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:]);
+	sendProposal(proposal, r.Form.Get("socketId")/*, здесб идет публичный ключ*/)
 	http.Redirect(w, r, "/main", 307)
 }
 

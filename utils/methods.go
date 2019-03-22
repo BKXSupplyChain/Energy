@@ -14,7 +14,3 @@ func ConvertIPToBytes(IP string) (res []byte) {
 	}
 	return
 }
-
-func IPSplitter(r rune) bool {
-	return r == '.'
-}
