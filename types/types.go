@@ -57,3 +57,9 @@ type Certificate struct {
 	Amount		*big.Int
 	ActiveContract	 string
 }
+
+type ProposalMessage struct {
+        UserKey    string	
+	Proposal   Proposal
+	Socket     SocketInfo
+}
