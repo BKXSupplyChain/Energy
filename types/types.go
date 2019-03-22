@@ -1,6 +1,8 @@
 package types
 
-import "math/big"
+import (
+	"math/big"
+)
 
 type SensorPacket struct {
 	SensorID  string `json:"sensorID"`
@@ -23,14 +25,14 @@ type SocketInfo struct {
 }
 
 type Proposal struct {
-	ID    string
-	From  string
-	To    string
-	Price uint64
+	ID          string
+	From        string
+	To          string
+	Price       uint64
 	TotalAmount big.Int
-	RelError uint16
-	AbsError big.Int
-	TTL   uint64 ///seconds
+	RelError    uint16
+	AbsError    big.Int
+	TTL         uint64 ///seconds
 }
 
 type Contract struct {
@@ -48,4 +50,17 @@ type UserData struct {
 	PasswordHash [32]byte /// SHA256
 	Sockets      []string
 	PrivateKey   string
+}
+
+type Certificate struct {
+	r              *big.Int
+	s              *big.Int
+	Amount         *big.Int
+	ActiveContract string
+}
+
+type ProposalMessage struct {
+	UserPublicKey      string
+	Proposal           Proposal
+	NeighbourPublicKey string
 }
