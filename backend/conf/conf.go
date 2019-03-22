@@ -14,6 +14,6 @@ func LoadConfig(path string) {
 	utils.CheckFatal(err)
 }
 
-func getSelfAddress() string {
+func GetSelfAddress() string {
 	return config.Get("selfAddress").String("") /// TODO: get it automaticly
 }

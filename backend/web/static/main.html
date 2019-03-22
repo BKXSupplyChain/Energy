@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="table">
+
+</div>
+<script>
+    b = document.getElementById("table")
+    serverAddr = '%s/mainData'
+    function update_sockets() {
+        var req = new XMLHttpRequest();
+        req.open('post', serverAddr, true);
+        req.send();
+        req.onreadystatechange = function () {
+            if (req.readyState == req.READYSTATE_COMPLETE) {
+                b.innerHTML = ""
+                for (line of JSON.parse(req.body)) {
+                    b.innerHTML += "<tr>"
+                    for (i = 0; i < 4; ++i) {
+                        b.innerHTML += "<td>" + line[i] + "</td>"
+                    }
+                    b.innerHTML += "</td><a href='/socket/?id=" + line[4] + "'><input type='button' value='config'></a></td></tr>"
+                }
+            }
+        }
+    }
+    update_sockets()
+    setInterval(update_sockets, 3000)
+</script>
+</body>
+</html>
