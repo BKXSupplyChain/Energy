@@ -59,7 +59,7 @@ type Certificate struct {
 }
 
 type ProposalMessage struct {
-        UserKey    string	
-	Proposal   Proposal
-	Socket     SocketInfo
+        UserPublicKey    string	
+	Proposal   	 Proposal
+	Socket     	 SocketInfo
 }
