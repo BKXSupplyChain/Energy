@@ -22,7 +22,7 @@ func updateSocket(proposal types.Proposal, userPublicKey /*TODO type */, Neighbo
     db.Upsert(&socket, socketID) //TODO maybe implement Update
 }
 
-func OnProposalReceived(proposal types.Proposal) {
+func (t *types.Proposal) OnProposalReceived(proposal types.Proposal) {
     putInDb(proposal)
     updateSocket(proposal, /*TODO key*/, /*TODO key*/)
 }
