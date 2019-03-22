@@ -14,17 +14,17 @@ func AddInDatabase(proposal types.Proposal)  {
     db.Add(proposal, proposal.ID)
 }
 
-func updateSocket(proposal types.Proposal, userPublicKey /*TODO type */, NeighbourPublicKey /*TODO type*/) {
+func UpdateSocket(proposal types.Proposal, userPublicKey string, NeighbourPublicKey string) {
     socketID := string(sha256.Sum256([]byte(userPublicKey+NeighbourPublicKey))[:12])
     var socket = types.SocketInfo
     db.Get(&socket, socketID)
-    socket.proposals = append(socket.proposals, /* TODO what to add */
-    db.Upsert(&socket, socketID) //TODO maybe implement Update
+    socket.proposals = append(socket.proposals, proposal.ID)
+    db.Upsert(&socket, socketID)
 }
 
-func (t *types.Proposal) OnProposalReceived(proposal types.Proposal) {
-    AddInDatabase(proposal)
-    updateSocket(proposal, /*TODO key*/, /*TODO key*/)
+func (t *types.ProposalMessage) OnProposalReceived(proposalMsg types.ProposalMessage) {
+    AddInDatabase(proposalMsg.Proposal)
+    UpdateSocket(proposal, proposalMsg.UserKey, /*TODO key*/)
 }
 
 func main() {
@@ -33,10 +33,10 @@ func main() {
     if (err != nil) {
          log.Fatalf("Error of format of Certificate: %s", err)
     }
-    proposal := new(types.Proposal)
-    err := rpc.register(proposal)
+    proposalMsg := new(types.ProposalMsg)
+    err := rpc.register(proposalMsg)
     if (err != nil) {
-         log.Fatalf("Error of format of Proposal: %s", err)
+         log.Fatalf("Error of format of proposalMsg: %s", err)
     }
     rpc.HandleHTTP()
     listener,err = net.Listen("tcp", ":30")
