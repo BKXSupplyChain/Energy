@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"fmt"
 	"os/exec"
-	"strings"
+	"net/url"
 )
 
 func serveFile(path string) func(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,6 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 func concludeContract(w http.ResponseWriter, r *http.Request) {
 	var proposal types.Proposal
 	r.ParseForm()
-	proposal.To = r.Form.Get("neighaddress")
 	i, err := strconv.ParseUint(r.Form.Get("price"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
@@ -107,7 +106,7 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	var username http.Cookie
 	for _, cookie := range r.Cookies() {
 		if (cookie.Name == "username") {
-			username := cookie
+			username = *cookie
 			break
 		}
 	}
@@ -116,19 +115,13 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	if db.Add(&proposal, string(id)) != nil { // здесь я не разобрался пока
 		log.Println("Failed to add propose")
 	}
-
 	uuid, err := exec.Command("uuidgen").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 	proposal.ID = fmt.Sprintf("%x.%x.%x.%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:]);
-
-	resp, err := http.Post("localhost:8000", "data", strings.NewReader(proposal))
-	if err != nil {
-		log.Println("Can't send propose")
-	}
-	defer resp.Body.Close()
-	http.Redirect(w, r, "main", 307)
+	SendProposal(proposal)
+	http.Redirect(w, r, "/main", 307)
 }
 
 func contractPage(w http.ResponseWriter, r *http.Request) {

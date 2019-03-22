@@ -24,8 +24,6 @@ type SocketInfo struct {
 
 type Proposal struct {
 	ID    string
-	From  string
-	To    string
 	Price uint64
 	TotalAmount big.Int
 	RelError uint16
