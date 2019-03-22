@@ -8,8 +8,11 @@ import (
     "net/rpc"
 )
 
-func sendProposal(proposal types.Proposal, /* socket */, /* userKey */) {
-    client, err := rpc.DialHTTP("tcp", ":30")
+func sendProposal(proposal types.Proposal, userPublicKey string, neighbourPublicKey string) {
+    socketID := string(sha256.Sum256([]byte(userPublicKey+NeighbourPublicKey))[:12])
+    var socket types.SocketInfo
+    db.Get(&socket, socketID)
+    client, err := rpc.DialHTTP("tcp", NeighborAddr + ":30")
     if (err != nil) {
         log.Fatalf("Error in dialing: %s", err)
     }
@@ -20,7 +23,7 @@ func sendProposal(proposal types.Proposal, /* socket */, /* userKey */) {
 }
 
 func sendCertificate(certif types.Certificate) {
-    client, err := rpc.DialHTTP("tcp", ":30")
+    client, err := rpc.DialHTTP("tcp", /*TODO address*/ ":30")
     if (err != nil) {
         log.Fatalf("Error in dialing: %s", err)
     }
