@@ -8,12 +8,12 @@ import (
     "net/rpc"
 )
 
-func sendProposal(proposal types.Proposal) {
+func sendProposal(proposal types.Proposal, /* socket */, /* userKey */) {
     client, err := rpc.DialHTTP("tcp", ":30")
     if (err != nil) {
         log.Fatalf("Error in dialing: %s", err)
     }
-    err = client.Call("Proposal.OnProposalReceived", proposal, {})
+    err = client.Call("types.Proposal.OnProposalReceived", proposal, {})
     if (err != nil) {
         log.Fatalf("Error in Proposal: %s", err)
     }
