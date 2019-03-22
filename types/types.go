@@ -50,3 +50,10 @@ type UserData struct {
 	Sockets      []string
 	PrivateKey   string
 }
+
+type Certificate struct {
+	r	 	*big.Int
+	s		*big.Int
+	Amount		*big.Int
+	ActiveContract	 string
+}
