@@ -16,7 +16,7 @@ func AddInDatabase(proposal types.Proposal)  {
 
 func UpdateSocket(proposal types.Proposal, userPublicKey string, NeighbourPublicKey string) {
     socketID := string(sha256.Sum256([]byte(userPublicKey+NeighbourPublicKey))[:12])
-    var socket = types.SocketInfo
+    var socket types.SocketInfo
     db.Get(&socket, socketID)
     socket.proposals = append(socket.proposals, proposal.ID)
     db.Upsert(&socket, socketID)
@@ -24,7 +24,7 @@ func UpdateSocket(proposal types.Proposal, userPublicKey string, NeighbourPublic
 
 func (t *types.ProposalMessage) OnProposalReceived(proposalMsg types.ProposalMessage) {
     AddInDatabase(proposalMsg.Proposal)
-    UpdateSocket(proposal, proposalMsg.UserKey, /*TODO key*/)
+    UpdateSocket(proposal, proposalMsg.UserPublicKey, proposalMsg.NeighbourPublicKey)
 }
 
 func main() {
