@@ -1,6 +1,8 @@
 package types
 
-import "math/big"
+import (
+	"math/big"
+)
 
 type SensorPacket struct {
 	SensorID  string `json:"sensorID"`
