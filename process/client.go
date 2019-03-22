@@ -6,17 +6,25 @@ import (
     "github.com/BKXSupplyChain/Energy/db"
     "github.com/BKXSupplyChain/Energy/types"
     "net/rpc"
-    //TODO import backend
 )
 
-
-func main() {
+func sendProposal(proposal types.Proposal) {
     client, err := rpc.DialHTTP("tcp", ":30")
     if (err != nil) {
         log.Fatalf("Error in dialing: %s", err)
     }
-    cp := .CreateCertificatedPair //TODO name of function in start which creates pair
-    err = client.Call("CertificatedPair."/*TODO name of function of checking if all is correct*/,cp, {})
+    err = client.Call("Proposal.OnProposalReceived", proposal, {})
+    if (err != nil) {
+        log.Fatalf("Error in Proposal: %s", err)
+    }
+}
+
+func sendCertificate(certif types.Certificate) {
+    client, err := rpc.DialHTTP("tcp", ":30")
+    if (err != nil) {
+        log.Fatalf("Error in dialing: %s", err)
+    }
+    err = client.Call("types.Certificate."/*TODO name of function of checking if all is correct*/, certif, {})
     if (err != nil) {
         log.Fatalf("Error in CertificatedPair: %s", err)
     }
