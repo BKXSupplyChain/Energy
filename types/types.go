@@ -30,7 +30,7 @@ type Proposal struct {
 	To          string
 	Price       uint64
 	TotalAmount big.Int
-	RelError    float
+	RelError    float64
 	AbsError    big.Int
 	TTL         uint64 ///seconds
 }
