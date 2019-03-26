@@ -8,10 +8,7 @@ import (
     "net/rpc"
 )
 
-func sendProposal(proposalMsg types.ProposalMessage, userPublicKey string, neighbourPublicKey string) {
-    socketID := string(sha256.Sum256([]byte(userPublicKey+NeighbourPublicKey))[:12])
-    var socket types.SocketInfo
-    db.Get(&socket, socketID)
+func sendProposal(proposalMsg types.ProposalMessage, userPublicKey string, socket types.SocketInfo) {
     client, err := rpc.DialHTTP("tcp", socket.NeighborAddr + ":30")
     if (err != nil) {
         log.Fatalf("Error in dialing: %s", err)
