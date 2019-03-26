@@ -2,13 +2,14 @@ package web
 
 import (
 	"crypto/sha256"
+	"crypto/ecdsa"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/BKXSupplyChain/Energy/backend/conf"
 	"github.com/BKXSupplyChain/Energy/db"
 	"github.com/BKXSupplyChain/Energy/types"
-	"github.com/BKXSupplyChain/Energy/process"
+	//"github.com/BKXSupplyChain/Energy/process"
 	"hash/crc64"
 	"io"
 	"io/ioutil"
@@ -19,9 +20,6 @@ import (
 	"time"
 	"math/big"
 	"strconv"
-	"fmt"
-	"os/exec"
-	"net/url"
 )
 
 func serveFile(path string) func(w http.ResponseWriter, r *http.Request) {
@@ -191,18 +189,24 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	id := make([]byte, 8)
-	binary.LittleEndian.PutUint64(id, crc64.Checksum([]byte(user.Username), crc64.MakeTable(crc64.ECMA)))
-	if db.Add(&proposal, string(id)) != nil { // здесь я не разобрался пока
+	id := UsernameToId(user.Username);
+	if db.Add(&proposal, id) != nil { // здесь я не разобрался пока
 		log.Println("Failed to add propose")
 	}
-	uuid, err := exec.Command("uuidgen").Output()
-	if err != nil {
+	//uuid, err := exec.Command("uuidgen").Output()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	privKey := new(big.Int)
+	privKey, ers := privKey.SetString(user.PrivateKey, 10)
+	if ers {
 		log.Fatal(err)
 	}
+	var keys ecdsa.PrivateKey
+	keys.D = privKey
 	proposal.ID = string(id)
 	//proposal.ID = fmt.Sprintf("%x.%x.%x.%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:]);
-	sendProposal(proposal, r.Form.Get("socketId")/*, здесб идет публичный ключ*/)
+	sendProposal(proposal, r.Form.Get("socketId"), user.Username, ecdsa.Public(keys))
 	http.Redirect(w, r, "/main", 307)
 }
 
