@@ -18,6 +18,17 @@ import (
 	"github.com/BKXSupplyChain/Energy/tree/master/ether/contracts"
 )
 
+func correctDivision (a big.Int, b big.Int) (*big.Float){
+	num_float1 := new(big.Float).SetInt(&a)
+	num_float2 := new(big.Float).SetInt(&b)
+	return new(big.Float).Quo(num_float1, num_float2)
+}
+
+func compareFloats (num1 big.Float, num2 float64) int {
+	numBigFloat2 := new(big.Float).SetFloat64(num2)
+	return num1.Cmp(numBigFloat2)
+}
+
 func provider(socketID string, userID string) {
 
 	//TODO get from provider (r, s, amountGet, contractID = socket.ActiveContract)
@@ -44,23 +55,23 @@ func provider(socketID string, userID string) {
 	valid := ecdsa.Verify(HexToECDSA(socket.NeighborKey), hash[:], r, s)
 
 	var absError big.Int = curentProposal.AbsError
-	var relError uint16 = curentProposal.RelError
-
+	var relError float64 = curentProposal.RelError
 
 	var delta big.Int
 	delta.Sub(amountWant, amountGet)
 	var absDelta big.Int
 	absDelta.Abs(&delta)
 
+	relerr := correctDivision(*amountGet, *amountWant)
 
 
 	if (valid) {
-		if (delta.Cmp(absError) <= 0 ) { //TODO relError) {
+		if (delta.Cmp(&absError) <= 0 && compareFloats(*relerr, relError) >= 0) {
 
 			var signature string = r.String() + " " + s.String()
 
 			contract.LastSertificate.Signature = signature
-			contract.LastSertificate.Amount = //TODO convert Big.Int to byte[32]
+			contract.LastSertificate.Amount = amountGet.bytes()
 
 		} else {
 
@@ -86,7 +97,9 @@ func provider(socketID string, userID string) {
 				//error
 			}
 
-			contracts.FinishSup(client, address, rawPrivateKey, //TODO (amount) , HexToECDSA(socket.NeighborKey),  r, s)
+
+			var lastAmount = new(big.Int).SetBytes(contract.LastSertificate.Amount)
+			contracts.FinishSup(client, address, rawPrivateKey, lastAmount , HexToECDSA(socket.NeighborKey),  r, s)
 
 			fmt.Printf("Waiting for a minute while our finish call is deploying.\n")
 			time.Sleep(time.Minute)
