@@ -135,6 +135,22 @@ func FinishSup(client *ethclient.Client,
 	}, amount, v, r, s)
 }
 
+// Returns balance at contract/wallet address.
+func BalanceAt(client *ethclient.Client, address common.Address) *big.Int {
+	balance, err := client.BalanceAt(context.Background(), address, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return balance
+}
+
+// Returns balance at contract/wallet raw address.
+func BalanceAtRaw(rawAddress string) *big.Int {
+	client := CreateNewClient()
+	address := common.HexToAddress(rawAddress)
+	return BalanceAt(client, address)
+}
+
 // Transfers money to the address.
 func TransferEthToContract(client *ethclient.Client,
 	raw_private_key string,
