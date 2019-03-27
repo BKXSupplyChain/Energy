@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"./contracts"
@@ -28,9 +26,6 @@ func main() {
 	time.Sleep(time.Minute)
 
 	// Проверяем, что денег на контракте не осталось.
-	balance, err := client.BalanceAt(context.Background(), address, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	balance := contracts.BalanceAt(client, address)
 	fmt.Println(balance)
 }
