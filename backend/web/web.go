@@ -3,23 +3,25 @@ package web
 import (
 	"crypto/sha256"
 	"crypto/ecdsa"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/BKXSupplyChain/Energy/backend/conf"
 	"github.com/BKXSupplyChain/Energy/db"
 	"github.com/BKXSupplyChain/Energy/types"
-	//"github.com/BKXSupplyChain/Energy/process"
-	"hash/crc64"
+	"github.com/BKXSupplyChain/Energy/utils"
 	"io"
 	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 	"math/big"
 	"strconv"
+
+	eth "github.com/ethereum/go-ethereum/crypto"
 )
 
 func serveFile(path string) func(w http.ResponseWriter, r *http.Request) {
@@ -28,20 +30,14 @@ func serveFile(path string) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func UsernameToId(name string) string {
-	id := make([]byte, 8)
-	binary.LittleEndian.PutUint64(id, crc64.Checksum([]byte(name), crc64.MakeTable(crc64.ECMA)))
-	return string(id)
-}
-
 func getUser(r *http.Request) (types.UserData, error) {
-	name, err := r.Cookie("username")
-	password, err := r.Cookie("password")
-	if err != nil {
-		return types.UserData{}, errors.New("Auth error")
+	name, errU := r.Cookie("username")
+	password, errP := r.Cookie("password")
+	if errU != nil || errP != nil {
+		return types.UserData{}, errors.New("Auth required")
 	}
-	log.Println("DATA GOT ", name, password)
-	id := UsernameToId(name.Value)
+
+	id := name.Value
 	var user types.UserData
 	if db.Get(&user, string(id)) != nil {
 		return types.UserData{}, errors.New("No such user")
@@ -55,14 +51,14 @@ func getUser(r *http.Request) (types.UserData, error) {
 func loginUser(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	http.SetCookie(w, &http.Cookie{
-		Name:    "username",
-		Value:   r.Form.Get("username"),
-		Expires: time.Now().AddDate(0, 0, 1),
+		Name:  "username",
+		Value: r.Form.Get("username"),
+		Path:  "/",
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:    "password",
-		Value:   r.Form.Get("password"),
-		Expires: time.Now().AddDate(0, 0, 1),
+		Name:  "password",
+		Value: r.Form.Get("password"),
+		Path:  "/",
 	})
 	http.Redirect(w, r, "/main", 307)
 }
@@ -79,8 +75,7 @@ func formatFloat(a float64) string {
 func mainData(w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(r)
 	if err != nil {
-		w.Header().Add("err", "Auth error")
-		http.Redirect(w, r, "/", 307)
+		http.Redirect(w, r, "/?err=Auth error", 307)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -89,7 +84,7 @@ func mainData(w http.ResponseWriter, r *http.Request) {
 		var soc types.SocketInfo
 		db.Get(&soc, socketID)
 		w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Alias)))
-		w.Write([]byte(fmt.Sprintf(", \"%sJ/s\"", formatFloat(float64(db.TokenGetPower(UsernameToId(user.Username), time.Now().Unix()-10))))))
+		w.Write([]byte(fmt.Sprintf(", \"%sJ/s\"", formatFloat(float64(db.TokenGetPower(user.Username, time.Now().Unix()-10))))))
 		if soc.ActiveProposal != "" {
 			var prop types.Proposal
 			db.Get(&prop, soc.ActiveProposal)
@@ -105,8 +100,7 @@ func mainData(w http.ResponseWriter, r *http.Request) {
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	_, err := getUser(r)
 	if err != nil {
-		w.Header().Add("err", "Auth error")
-		http.Redirect(w, r, "/", 307)
+		http.Redirect(w, r, "/?err="+err.Error(), 307)
 		return
 	}
 	pattern, _ := ioutil.ReadFile("./web/static/main.html")
@@ -117,91 +111,91 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	var user types.UserData
 	r.ParseForm()
 	user.Username = r.Form.Get("username")
-	id := UsernameToId(user.Username)
+	id := user.Username
 	user.PasswordHash = sha256.Sum256([]byte(r.Form.Get("password")))
 	user.PrivateKey = r.Form.Get("privkey")
-	log.Println(r.Header)
 	if db.Add(&user, string(id)) != nil {
-		w.Header().Add("err", "Username is reserved")
-		http.Redirect(w, r, "/register", 307)
+		http.Redirect(w, r, "/register?err=Username is reserved", 307)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:    "username",
-		Value:   user.Username,
-		Expires: time.Now().AddDate(0, 0, 1),
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:    "password",
-		Value:   r.Form.Get("password"),
-		Expires: time.Now().AddDate(0, 0, 1),
-	})
-	http.Redirect(w, r, "/main", 307)
+	loginUser(w, r)
 }
 
 func registerPage(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("err") != "" {
-		w.Write([]byte("<div class=\"err\">" + r.Header.Get("err") + "</div>"))
+	if strings.HasPrefix(r.URL.RawQuery, "err=") {
+		text, err := url.QueryUnescape(r.URL.RawQuery[4:])
+		if err == nil {
+			w.Write([]byte("<div class=\"err\">" + text + "</div>"))
+		}
 	}
 	file, _ := os.Open("./web/static/register.html")
 	io.Copy(w, file)
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("err") != "" {
-		w.Write([]byte("<div class=\"err\">" + r.Header.Get("err") + "</div>"))
+	if strings.HasPrefix(r.URL.RawQuery, "err=") {
+		text, err := url.QueryUnescape(r.URL.RawQuery[4:])
+		if err == nil {
+			w.Write([]byte("<div class=\"err\">" + text + "</div>"))
+		}
 	}
 	file, _ := os.Open("./web/static/login.html")
 	io.Copy(w, file)
+}
+
+func changePassword(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/?err="+err.Error(), 307)
+		return
+	}
+	if r.ParseForm() != nil {
+		http.Redirect(w, r, "/personal", 307)
+	}
+	user.PasswordHash = sha256.Sum256([]byte(r.Form.Get("new_password")))
+	http.SetCookie(w, &http.Cookie{
+		Name:  "password",
+		Value: r.Form.Get("new_password"),
+		Path:  "/",
+	})
+	w.Write([]byte("<h1>Password changed!</h1></br><a href = \"/main\">To main</a>"))
 }
 
 func createProposal(w http.ResponseWriter, r *http.Request) {
 	var proposal types.Proposal
 	r.ParseForm()
 	i, err := strconv.ParseUint(r.Form.Get("price"), 10, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
+	utils.CheckFatal(err)
 	proposal.Price = i
-	i, err = strconv.ParseFloat(r.Form.Get("relerror"), 10, 16)
-	if err != nil {
-		log.Fatal(err)
-	}
-	proposal.RelError = i
+	relErr, err := strconv.ParseFloat(r.Form.Get("relerror"), 32)
+	utils.CheckFatal(err)
+	proposal.RelError = relErr
 	bigI := new(big.Int)
 	bigI, errs := bigI.SetString(r.Form.Get("abserror"), 10)
 	proposal.AbsError = *bigI
 	if errs {
-		log.Fatal(errs)
+		log.Fatal("Conversion error")
 	}
 	i, err = strconv.ParseUint(r.Form.Get("durability"), 10, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
+	utils.CheckFatal(err)
 	proposal.TTL = i
 	bigI = new(big.Int)
 	bigI, errs = bigI.SetString(r.Form.Get("amount"), 10)
 	proposal.TotalAmount = *bigI
-	if errs {
-		log.Fatal(err)
-	}
+	utils.CheckFatal(err)
 	user, err := getUser(r)
-	if err != nil {
-		log.Fatal(err)
-	}
-	id := UsernameToId(user.Username);
-	if db.Add(&proposal, id) != nil { // здесь я не разобрался пока
+	utils.CheckFatal(err)
+	if db.Add(&proposal, user.Username) != nil { // здесь я не разобрался пока
 		log.Println("Failed to add propose")
 	}
-	privKey := new(big.Int)
-	privKey, ers := privKey.SetString(user.PrivateKey, 10)
-	if ers {
-		log.Fatal(err)
-	}
-	var keys ecdsa.PrivateKey
-	keys.D = privKey
-	proposal.ID = string(id)
-	sendProposal(proposal, r.Form.Get("socketId"), user.Username, ecdsa.Public(keys))
+	//uuid, err := exec.Command("uuidgen").Output()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	pKey, err := eth.HexToECDSA(user.PrivateKey)
+	utils.CheckFatal(err)
+	proposal.ID = db.GetNewID()
+	sendProposal(proposal, r.Form.Get("socketId"), pKey.PublicKey)
 	http.Redirect(w, r, "/main", 307)
 }
 
@@ -217,6 +211,10 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/main", 307);
 }
 
+func sendProposal(proposal types.Proposal, socID string, key ecdsa.PublicKey)  {
+	log.Println("SEND PROPOSAL", proposal, socID, key)
+}
+
 func Serve() {
 	http.HandleFunc("/", loginPage)
 	http.HandleFunc("/login/impl", loginUser)
@@ -225,6 +223,8 @@ func Serve() {
 	http.HandleFunc("/register/impl", registerUser)
 	http.HandleFunc("/main", mainPage)
 	http.HandleFunc("/mainData", mainData)
+	http.HandleFunc("/personal", serveFile("./web/static/personal.html"))
+	http.HandleFunc("/personal/chpass", changePassword)
 	http.HandleFunc("/style.css", serveFile("./web/static/style.css"))
 	http.HandleFunc("/proposal/impl", createProposal)
 	http.HandleFunc("/proposal", proposalPage)
