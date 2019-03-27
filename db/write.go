@@ -1,6 +1,7 @@
 package db
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"github.com/BKXSupplyChain/Energy/types"
@@ -88,20 +89,30 @@ func GetNewID() string {
 	return string(bson.NewObjectId())
 }
 
+func strToId(a string) bson.ObjectId {
+	hashed := md5.Sum([]byte(a))
+	return bson.ObjectId(hashed[:12])
+}
+
 func Add(obj interface{}, id string) error {
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	log.Println(coll.Name, " -> ", id, " ", obj)
-	return coll.Insert(bson.M{"_id": id}, obj)
+	err := coll.Insert(bson.M{"_id": strToId(id)})
+	if err != nil {
+		log.Println("ADD ERROR:", coll.Name, "->", id, obj, ":", err)
+		return err
+	}
+	Upsert(obj, id)
+	return nil
 }
 
 func Get(obj interface{}, id string) (err error) {
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	return coll.FindId(id).One(&obj)
+	return coll.FindId(strToId(id)).One(obj)
 }
 
 func Upsert(obj interface{}, id string) {
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	coll.UpsertId(id, bson.M{"$set": obj})
+	coll.UpsertId(strToId(id), bson.M{"$set": obj})
 }
 
 func getEnergy(SocketID string) uint64 {
