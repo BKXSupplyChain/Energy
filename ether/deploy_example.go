@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"math/big"
 	"time"
 
@@ -39,9 +37,6 @@ func main() {
 	time.Sleep(time.Minute)
 
 	// Вот так можно спросить баланс контракта, да и любого другого кошелька тоже.
-	balance, err := client.BalanceAt(context.Background(), address, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	balance := contracts.BalanceAt(client, address)
 	fmt.Println(balance)
 }
