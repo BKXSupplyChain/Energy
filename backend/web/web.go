@@ -136,6 +136,24 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, file)
 }
 
+func changePassword(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/?err="+err.Error(), 307)
+		return
+	}
+	if r.ParseForm() != nil {
+		http.Redirect(w, r, "/personal", 307)
+	}
+	user.PasswordHash = sha256.Sum256([]byte(r.Form.Get("new_password")))
+	http.SetCookie(w, &http.Cookie{
+		Name:  "password",
+		Value: r.Form.Get("new_password"),
+		Path:  "/",
+	})
+	w.Write([]byte("<h1>Password changed!</h1></br><a href = \"/main\">To main</a>"))
+}
+
 func Serve() {
 	http.HandleFunc("/", loginPage)
 	http.HandleFunc("/login/impl", loginUser)
@@ -144,6 +162,8 @@ func Serve() {
 	http.HandleFunc("/register/impl", registerUser)
 	http.HandleFunc("/main", mainPage)
 	http.HandleFunc("/mainData", mainData)
+	http.HandleFunc("/personal", serveFile("./web/static/personal.html"))
+	http.HandleFunc("/personal/chpass", changePassword)
 	http.HandleFunc("/style.css", serveFile("./web/static/style.css"))
 	http.ListenAndServe(":80", nil)
 }
