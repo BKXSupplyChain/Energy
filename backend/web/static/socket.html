@@ -1,0 +1,41 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div id="table">
+
+    </div>
+    <script>
+        b = document.getElementById("table")
+        path = document.URL()
+        function getId(path) {
+            var id;
+            path = path.split('?')[1];
+            id = path.split('=')[1];
+            return id;
+        }
+        socketId = getId(path)
+        serverAddres = "%s/socketData"
+        function updateSocketInfo(socketId) {
+            var req = XMLHttpRequest();
+            req.open('post', serverAddres, true);
+            req.send(socketId);
+            req.onreadystatechange = function() {
+                if (req.readyState == req.READYSTATE_COMPLETE) {
+                    b.innerHTML = ""
+                    for (line of JSON.parse(req.body)) {
+                        b.innerHTML += "<tr>"
+                        for (i = 0; i < 2; ++i) {
+                            b.innerHTML += "<td>" + line[i] + "</td>"
+                        }
+                        b.innerHTML += "</tr>"
+                    }
+                }
+            }
+        }
+        updateSocketInfo(socketId)
+        setInterval(updateSocketInfo, 3000, socketId)
+    </script>
+</body>
+</html>

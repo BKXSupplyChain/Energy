@@ -185,13 +185,9 @@ func createProposal(w http.ResponseWriter, r *http.Request) {
 	utils.CheckFatal(err)
 	user, err := getUser(r)
 	utils.CheckFatal(err)
-	if db.Add(&proposal, user.Username) != nil { // здесь я не разобрался пока
+	if db.Add(&proposal, user.Username) != nil { 
 		log.Println("Failed to add propose")
 	}
-	//uuid, err := exec.Command("uuidgen").Output()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
 	pKey, err := eth.HexToECDSA(user.PrivateKey)
 	utils.CheckFatal(err)
 	proposal.ID = db.GetNewID()
@@ -211,8 +207,36 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/main", 307);
 }
 
+func contractData(w http.ResponseWriter, r *http.Request) {
+	//здесь забираем данные о текущем контракте
+}
+
 func sendProposal(proposal types.Proposal, socID string, key ecdsa.PublicKey)  {
 	log.Println("SEND PROPOSAL", proposal, socID, key)
+}
+
+func socketPage(w http.ResponseWriter, r *http.Request) {
+	serveFile("./web/static/socket.html")
+}
+
+func socketData(w http.ResponseWriter, r *http.Request) {
+	socketID = r.Body()
+	user, err := getUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/?err=Auth error", 307)
+		return
+	}
+	var soc types.SocketInfo
+	db.Get(&soc, socketID)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("["))
+	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.SensorID)))
+	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Owner)))
+	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Alias)))
+	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.NeighborAddr)))
+	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.NeighborKey)))
+	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.ActiveContract)))
+	w.Write([]byte("]"))
 }
 
 func Serve() {
@@ -230,5 +254,7 @@ func Serve() {
 	http.HandleFunc("/proposal", proposalPage)
 	http.HandleFunc("/contract", contractPage)
 	http.HandleFunc("/contract/impl", concludeContract)
+	http.HandleFunc("/contractData", contractData)
+	http.HandleFunc("/socket", socketPage)
 	http.ListenAndServe(":80", nil)
 }
