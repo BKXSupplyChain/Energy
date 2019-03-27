@@ -193,10 +193,6 @@ func createProposal(w http.ResponseWriter, r *http.Request) {
 	if db.Add(&proposal, id) != nil { // здесь я не разобрался пока
 		log.Println("Failed to add propose")
 	}
-	//uuid, err := exec.Command("uuidgen").Output()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
 	privKey := new(big.Int)
 	privKey, ers := privKey.SetString(user.PrivateKey, 10)
 	if ers {
@@ -205,7 +201,6 @@ func createProposal(w http.ResponseWriter, r *http.Request) {
 	var keys ecdsa.PrivateKey
 	keys.D = privKey
 	proposal.ID = string(id)
-	//proposal.ID = fmt.Sprintf("%x.%x.%x.%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:]);
 	sendProposal(proposal, r.Form.Get("socketId"), user.Username, ecdsa.Public(keys))
 	http.Redirect(w, r, "/main", 307)
 }
