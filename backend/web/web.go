@@ -155,19 +155,19 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, file)
 }
 
-func concludeContract(w http.ResponseWriter, r *http.Request) {
+func createProposal(w http.ResponseWriter, r *http.Request) {
 	var proposal types.Proposal
 	r.ParseForm()
 	i, err := strconv.ParseUint(r.Form.Get("price"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
-	proposal.Price = uint64(i)
-	i, err = strconv.ParseUint(r.Form.Get("relerror"), 10, 16)
+	proposal.Price = i
+	i, err = strconv.ParseFloat(r.Form.Get("relerror"), 10, 16)
 	if err != nil {
 		log.Fatal(err)
 	}
-	proposal.RelError = uint16(i)
+	proposal.RelError = i
 	bigI := new(big.Int)
 	bigI, errs := bigI.SetString(r.Form.Get("abserror"), 10)
 	proposal.AbsError = *bigI
@@ -178,7 +178,7 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	proposal.TTL = uint64(i)
+	proposal.TTL = i
 	bigI = new(big.Int)
 	bigI, errs = bigI.SetString(r.Form.Get("amount"), 10)
 	proposal.TotalAmount = *bigI
@@ -210,8 +210,16 @@ func concludeContract(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/main", 307)
 }
 
+func proposalPage(w http.ResponseWriter, r *http.Request) {
+	serveFile("./web/static/proposal.html")(w, r)
+}
+
 func contractPage(w http.ResponseWriter, r *http.Request) {
 	serveFile("./web/static/contract.html")(w, r)
+}
+
+func concludeContract(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/main", 307);
 }
 
 func Serve() {
@@ -223,7 +231,9 @@ func Serve() {
 	http.HandleFunc("/main", mainPage)
 	http.HandleFunc("/mainData", mainData)
 	http.HandleFunc("/style.css", serveFile("./web/static/style.css"))
-	http.HandleFunc("/contract/impl", concludeContract)
+	http.HandleFunc("/proposal/impl", createProposal)
+	http.HandleFunc("/proposal", proposalPage)
 	http.HandleFunc("/contract", contractPage)
+	http.HandleFunc("/contract/impl", concludeContract)
 	http.ListenAndServe(":80", nil)
 }
