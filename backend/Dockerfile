@@ -12,5 +12,5 @@ FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /go/src/github.com/BKXSupplyChain/Energy/backend/backend .
 COPY --from=builder /go/src/github.com/BKXSupplyChain/Energy/backend/conf.json .
-COPY --from=builder /go/src /github.com/BKXSupplyChain/Energy/backend/web/static ./web/static/
+COPY --from=builder /go/src/github.com/BKXSupplyChain/Energy/backend/web/static ./web/static/
 CMD ["./backend"]
