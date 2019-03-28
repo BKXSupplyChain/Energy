@@ -1,3 +1,4 @@
+
 #include <assert.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
@@ -6,12 +7,8 @@
 #include <FS.h>
 #include <ArduinoJson.h>
 
-extern "C" {
-#include "user_interface.h"
-}
-
-const char *credArgs[] = {"wifi_ssid", "wifi_pass", "data_url", "data_port", "user_token", "neighbor_token"};
-const int CNT_OF_ARGS = 6;
+const char *credArgs[] = {"wifi_ssid", "wifi_pass", "data_url", "sensor_id"};
+const int CNT_OF_ARGS = 4;
 
 const char *AP_SSID = "ESP";
 const char *AP_PASS = "3.141592";
@@ -22,15 +19,13 @@ const int CLIENT_CONN_DELAY = 1000;
 const int JSON_STACK_SIZE = 300;
 
 struct Credentials {
-    String WiFiSSID, WiFiPASS, dataURL, dataPort, userToken, neighborToken;
+    String WiFiSSID, WiFiPASS, dataURL, sensorID; // dataURL goes with port
     Credentials(){};
-    Credentials(const String &_SSID, const String &_PASS, const String &_URL, const String &_port, const String &_userToken, const String &_neighborToken): 
+    Credentials(const String &_SSID, const String &_PASS, const String &_URL, const String &_sensorID): 
         WiFiSSID(_SSID), 
         WiFiPASS(_PASS), 
         dataURL(_URL),
-        dataPort(_port),
-        userToken(_userToken),
-        neighborToken(_neighborToken) {
+        sensorID(_sensorID) {
     };
 
     String &getVar(const char *_name) {
@@ -50,21 +45,13 @@ struct Credentials {
             case 2:
                 return dataURL;
             case 3:
-                return dataPort;
-            case 4:
-                return userToken;
-            case 5:
-                return neighborToken;
+                return sensorID;
         }
     }
 
     const char *getArg(const char *_name) {
         String &_arg = getVar(_name);
         return _arg.c_str();
-    }
-
-    int getPort() const {
-        return strtol(dataPort.c_str(), NULL, 10);
     }
 };
 
@@ -86,8 +73,6 @@ bool tryToConnectWiFi(const Credentials &cred) {
         return true;
     }
     delay(WIFI_CONN_DELAY);
-    Serial.println(cred.WiFiSSID);
-    Serial.println(cred.WiFiPASS);
     WiFi.begin(cred.WiFiSSID.c_str(), cred.WiFiPASS.c_str());
     if (WiFi.waitForConnectResult() == WL_CONNECTED) {
         Serial.println("Success!");
@@ -113,14 +98,11 @@ void handleRegistration() {
 }
 
 void saveCredentials(const char *filename, Credentials &cred) {
-    Serial.println(filename);
     Serial.println("SPIFFS Open");
-    Serial.println(system_get_free_heap_size());
     File credFile = SPIFFS.open(filename, "w");
     Serial.println("Credentials open!");
     StaticJsonBuffer<JSON_STACK_SIZE> jsonBuffer;
     JsonObject &root = jsonBuffer.createObject();
-    Serial.println("Arduino JSON!");
     for (int i = 0; i < CNT_OF_ARGS; ++i) {
         root[credArgs[i]] = cred.getArg(credArgs[i]);
     }
@@ -134,7 +116,6 @@ void saveCredentials(const char *filename, Credentials &cred) {
 }
 
 void loadCredentials(const char *filename, Credentials &cred) {
-    
     File credFile = SPIFFS.open(filename, "r");
     StaticJsonBuffer<JSON_STACK_SIZE> jsonBuffer;
     JsonObject &root = jsonBuffer.parseObject(credFile);
@@ -159,6 +140,7 @@ void loadCredentials(const char *filename, Credentials &cred) {
 Credentials mainCred;
 
 bool credentialsAreValid() {
+    Serial.println("Check credentials!");
     for (int i = 0; i < CNT_OF_ARGS; ++i) {
         if (!server.hasArg(credArgs[i]) || server.arg(credArgs[i]) == NULL) {
             return false;
@@ -171,19 +153,13 @@ bool credentialsAreValid() {
         return false;
     }
     cred.dataURL = server.arg("data_url");
-    cred.dataPort = server.arg("data_port");
     Serial.println(cred.dataURL);
-    Serial.println(cred.dataPort);
     if (!tryToConnectServer(cred)) {
         return false;
     }
 
-    // Check response from server by sending token and receiving response, TODO
-    
-    cred.userToken = server.arg("user_token");
-    cred.neighborToken = server.arg("neighbor_token");
-    Serial.println(cred.userToken);
-    Serial.println(cred.neighborToken);
+    cred.sensorID = server.arg("sensor_id");
+    Serial.println(cred.sensorID);
     mainCred = cred;
     Serial.println("Data is valid!");
     return true;
@@ -235,20 +211,23 @@ void setup() {
         Serial.println("Connecting to server...");
         Serial.println(tryToConnectServer(mainCred));
     }
-    Serial.println("RETURN");
-    return;
 }
 
 int readVoltage() {
-    return 100;
+    return analogRead(A0);
 }
+
+
+int total = 0; // total consumption, TODO: overflow
+int prevVoltage = 0;
 
 String getData() {
     StaticJsonBuffer<JSON_STACK_SIZE> jsonBuffer;
     JsonObject &root = jsonBuffer.createObject();
-    root["voltage"] = readVoltage();
-    root["user_token"] = mainCred.userToken;
-    root["neighbor_token"] = mainCred.neighborToken;
+    int currVoltage = readVoltage();
+    total += (currVoltage + prevVoltage) / 2;
+    root["total"] = total;
+    root["sensorID"] = mainCred.sensorID;
     String res;
     root.printTo(res);
     Serial.println(res);
@@ -256,17 +235,11 @@ String getData() {
 }
 
 void loop() {
-    delay(5000);
+    delay(SENDING_FRAME);    
     Serial.println("LOOP!");
     if (mainCred.WiFiPASS != "") {
         tryToConnectWiFi(mainCred);
-        int responseCode = sendDataToServer(getData());
-        if (responseCode == -1) {
-            Serial.println("Connection refused"); 
-        } else {
-            Serial.println("Data sent");
-            Serial.println(getDataFromServer());
-        }
+        sendDataToServer(getData());
     } else {
         server.handleClient();
     }
