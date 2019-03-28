@@ -220,22 +220,23 @@ func socketPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func socketData(w http.ResponseWriter, r *http.Request) {
-	socketID = r.Body()
-	user, err := getUser(r)
+	byteSocketID, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Redirect(w, r, "/?err=Auth error", 307)
-		return
+		http.Redirect(w, r, "/?err=Unknown error", 307)
+		log.Fatal("Parsing error")
+		return 
 	}
+	socketID := string(byteSocketID)
 	var soc types.SocketInfo
 	db.Get(&soc, socketID)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("["))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.SensorID)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Owner)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Alias)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.NeighborAddr)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.NeighborKey)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.ActiveContract)))
+	w.Write([]byte(fmt.Sprintf("[SensorID,\"%s\"]", soc.SensorID)))
+	w.Write([]byte(fmt.Sprintf("[Owner,\"%s\"]", soc.Owner)))
+	w.Write([]byte(fmt.Sprintf("[Alias,\"%s\"]", soc.Alias)))
+	w.Write([]byte(fmt.Sprintf("[Neighbour address,\"%s\"]", soc.NeighborAddr)))
+	w.Write([]byte(fmt.Sprintf("[Neighbour key,\"%s\"]", soc.NeighborKey)))
+	w.Write([]byte(fmt.Sprintf("[Active contract, \"%s\"]", soc.ActiveContract)))
 	w.Write([]byte("]"))
 }
 
@@ -256,5 +257,6 @@ func Serve() {
 	http.HandleFunc("/contract/impl", concludeContract)
 	http.HandleFunc("/contractData", contractData)
 	http.HandleFunc("/socket", socketPage)
+	http.HandleFunc("/socketData", socketData)
 	http.ListenAndServe(":80", nil)
 }
