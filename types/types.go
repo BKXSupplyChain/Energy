@@ -53,9 +53,9 @@ type UserData struct {
 }
 
 type Certificate struct {
-	r              *big.Int
-	s              *big.Int
-	Amount         *big.Int
+	r              [32]byte
+	s              [32]byte
+	Amount         [32]byte
 	ActiveContract string
 }
 
