@@ -16,7 +16,7 @@ func AddInDatabase(proposal types.Proposal)  {
 }
 
 func UpdateSocket(proposal types.Proposal, userPublicKey string, NeighbourPublicKey string) {
-    socketID := string(sha256.Sum256([]byte(userPublicKey+NeighbourPublicKey))[:12])
+    socketID := userPublicKey + NeighbourPublicKey
     var socket types.SocketInfo
     db.Get(&socket, socketID)
     socket.proposals = append(socket.proposals, proposal.ID)
