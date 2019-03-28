@@ -1,8 +1,8 @@
 package web
 
 import (
-	"crypto/sha256"
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"github.com/BKXSupplyChain/Energy/backend/conf"
@@ -13,13 +13,13 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"math/big"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
-	"math/big"
-	"strconv"
 
 	eth "github.com/ethereum/go-ethereum/crypto"
 )
@@ -185,7 +185,7 @@ func createProposal(w http.ResponseWriter, r *http.Request) {
 	utils.CheckFatal(err)
 	user, err := getUser(r)
 	utils.CheckFatal(err)
-	if db.Add(&proposal, user.Username) != nil { 
+	if db.Add(&proposal, user.Username) != nil {
 		log.Println("Failed to add propose")
 	}
 	pKey, err := eth.HexToECDSA(user.PrivateKey)
@@ -204,14 +204,14 @@ func contractPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func concludeContract(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/main", 307);
+	http.Redirect(w, r, "/main", 307)
 }
 
 func contractData(w http.ResponseWriter, r *http.Request) {
 	//здесь забираем данные о текущем контракте
 }
 
-func sendProposal(proposal types.Proposal, socID string, key ecdsa.PublicKey)  {
+func sendProposal(proposal types.Proposal, socID string, key ecdsa.PublicKey) {
 	log.Println("SEND PROPOSAL", proposal, socID, key)
 }
 
@@ -253,6 +253,24 @@ func socketData(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("]"))
 }
 
+func createSocket(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/?err="+err.Error(), 307)
+		return
+	}
+	r.ParseForm()
+	var soc types.SocketInfo
+	soc.Alias = r.Form.Get("name")
+	soc.NeighborAddr = r.Form.Get("nAddr")
+	soc.NeighborKey = r.Form.Get("nKey")
+	soc.Owner = user.Username
+	id := db.ForgeToken(&soc, utils.PrivateHexToAddress(user.PrivateKey))
+	user.Sockets = append(user.Sockets, id)
+	db.Upsert(&user, user.Username)
+	http.Redirect(w, r, "/socket?socketID="+id, 307)
+}
+
 func Serve() {
 	http.HandleFunc("/", loginPage)
 	http.HandleFunc("/login/impl", loginUser)
@@ -270,6 +288,11 @@ func Serve() {
 	http.HandleFunc("/contract/impl", concludeContract)
 	http.HandleFunc("/contractData", contractData)
 	http.HandleFunc("/socket", socketPage)
+<<<<<<< HEAD
 	http.HandleFunc("/socketData", socketData)
+=======
+	http.HandleFunc("/newsocket", serveFile("./web/static/style.css"))
+	http.HandleFunc("/newsocket/impl", createSocket)
+>>>>>>> origin/contract_page
 	http.ListenAndServe(":80", nil)
 }
