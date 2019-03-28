@@ -231,12 +231,25 @@ func socketData(w http.ResponseWriter, r *http.Request) {
 	db.Get(&soc, socketID)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("["))
+	w.Write([]byte("["))
 	w.Write([]byte(fmt.Sprintf("[SensorID,\"%s\"]", soc.SensorID)))
 	w.Write([]byte(fmt.Sprintf("[Owner,\"%s\"]", soc.Owner)))
 	w.Write([]byte(fmt.Sprintf("[Alias,\"%s\"]", soc.Alias)))
 	w.Write([]byte(fmt.Sprintf("[Neighbour address,\"%s\"]", soc.NeighborAddr)))
 	w.Write([]byte(fmt.Sprintf("[Neighbour key,\"%s\"]", soc.NeighborKey)))
 	w.Write([]byte(fmt.Sprintf("[Active contract, \"%s\"]", soc.ActiveContract)))
+	w.Write([]byte("]"))
+	w.Write([]byte("["))
+	for _, propID := range soc.Proposals {
+		var prop types.Proposal
+		db.Get(&prop, propID)
+		w.Write([]byte(fmt.Sprintf("[ID,\"%s\"]", prop.ID)))
+		w.Write([]byte(fmt.Sprintf("[Price,\"%s\"]", strconv.FormatUint(prop.Price, 10))))
+		w.Write([]byte(fmt.Sprintf("[Total Amount,\"%s\"]", prop.TotalAmount.String())))
+		w.Write([]byte(fmt.Sprintf("[Relative error,\"%.6f\"]", prop.RelError)))
+		w.Write([]byte(fmt.Sprintf("[Absolute error,\"%s\"]", prop.AbsError.String())))
+		w.Write([]byte(fmt.Sprintf("[TTl,\"%s\"]", strconv.FormatUint(prop.TTL, 10))))
+	}
 	w.Write([]byte("]"))
 }
 
