@@ -15,6 +15,7 @@ import (
 )
 
 func recieveData(w http.ResponseWriter, r *http.Request) {
+	log.Println("RECIEVED", r.Body)
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Fatal(err)

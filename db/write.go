@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
 	"github.com/globalsign/mgo"
@@ -11,6 +12,7 @@ import (
 	"github.com/micro/go-config"
 	"log"
 	"math"
+	"math/rand"
 )
 
 var session *mgo.Session
@@ -64,11 +66,11 @@ func objectIdToB64(in bson.ObjectId) string {
 	return base64.URLEncoding.EncodeToString(bytedID)
 }
 
-func ForgeToken(d *types.SocketInfo) string {
+func ForgeToken(d *types.SocketInfo, ownerAddr string) string {
 	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	var objectId bson.ObjectId = bson.NewObjectId()
-	utils.CheckFatal(coll.Insert(bson.M{"_id": objectId}, &d))
-	return string(objectId)
+	id := ownerAddr + d.NeighborAddr
+	d.SensorID = fmt.Sprintf("%16x", rand.Uint64())
+	return id
 }
 
 func TokenGetPower(id string, fromTime int64) (power float32) {
@@ -115,9 +117,9 @@ func Upsert(obj interface{}, id string) {
 	coll.UpsertId(strToId(id), bson.M{"$set": obj})
 }
 
-func getEnergy(SocketID string) uint64 {
+func getEnergy(SensorID string) uint64 {
 	sensColl := session.DB(getMongoDatabase()).C(getMongoMetricCollection())
 	var pac types.SensorPacket
-	sensColl.Find(bson.M{"sensorID": bson.ObjectIdHex(SocketID)}).Sort("-Timestamp").One(&pac)
+	sensColl.Find(bson.M{"sensorID": bson.ObjectIdHex(SensorID)}).Sort("-Timestamp").One(&pac)
 	return pac.Total
 }

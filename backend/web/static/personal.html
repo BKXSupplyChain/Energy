@@ -5,13 +5,13 @@
 </head>
 <body>
 <ul>
-    <li class="active">Main</li>
+    <li><a class="active">Main</a></li>
     <li><a href="/personal">Account</a></li>
 </ul>
-<div class="formdiv" ><form action="/personal/chpass" method="post">
-    <br /> New password:
-    <input name="new_password" type="password" class="textinput" autocomplete="new-password" /><br /> <input type="submit" value="change password" style="width: 45%">
-</form></div>
+<form action="/personal/chpass" method="post" >
+    <label style="font-size: 25">New password:</label>
+    <input name="new_password" type="password" class="textinput" autocomplete="new-password" style="width: 600px !important" />
+    <input type="submit" value="change password" style="width: 45%">
 
 </body>
 </html>
