@@ -3,9 +3,9 @@ package web
 import (
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/BKXSupplyChain/Energy/backend/conf"
 	"github.com/BKXSupplyChain/Energy/db"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
@@ -80,11 +80,17 @@ func mainData(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("["))
+	first := true
 	for _, socketID := range user.Sockets {
+		if first {
+			first = false
+		} else {
+			w.Write([]byte(","))
+		}
 		var soc types.SocketInfo
 		db.Get(&soc, socketID)
 		w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Alias)))
-		w.Write([]byte(fmt.Sprintf(", \"%sJ/s\"", formatFloat(float64(db.TokenGetPower(user.Username, time.Now().Unix()-10))))))
+		w.Write([]byte(fmt.Sprintf(", \"%sJ/s\"", formatFloat(float64(db.TokenGetPower(soc.SensorID, time.Now().Unix()-10))))))
 		if soc.ActiveProposal != "" {
 			var prop types.Proposal
 			db.Get(&prop, soc.ActiveProposal)
@@ -92,7 +98,7 @@ func mainData(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.Write([]byte(", \"NC\""))
 		}
-		w.Write([]byte(fmt.Sprintf("[\"%s\"", socketID)))
+		w.Write([]byte(fmt.Sprintf(", \"%s\"]", socketID)))
 	}
 	w.Write([]byte("]"))
 }
@@ -104,7 +110,7 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pattern, _ := ioutil.ReadFile("./web/static/main.html")
-	w.Write([]byte(fmt.Sprintf(string(pattern), conf.GetSelfAddress())))
+	w.Write([]byte(fmt.Sprintf(string(pattern), "")))
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
@@ -221,10 +227,11 @@ func socketPage(w http.ResponseWriter, r *http.Request) {
 
 func socketData(w http.ResponseWriter, r *http.Request) {
 	byteSocketID, err := ioutil.ReadAll(r.Body)
+	log.Println("GET SOC", hex.EncodeToString(byteSocketID))
 	if err != nil {
 		http.Redirect(w, r, "/?err=Unknown error", 307)
 		log.Fatal("Parsing error")
-		return 
+		return
 	}
 	socketID := string(byteSocketID)
 	var soc types.SocketInfo
@@ -288,11 +295,8 @@ func Serve() {
 	http.HandleFunc("/contract/impl", concludeContract)
 	http.HandleFunc("/contractData", contractData)
 	http.HandleFunc("/socket", socketPage)
-<<<<<<< HEAD
 	http.HandleFunc("/socketData", socketData)
-=======
-	http.HandleFunc("/newsocket", serveFile("./web/static/style.css"))
+	http.HandleFunc("/newsocket", serveFile("./web/static/newsocket.html"))
 	http.HandleFunc("/newsocket/impl", createSocket)
->>>>>>> origin/contract_page
 	http.ListenAndServe(":80", nil)
 }

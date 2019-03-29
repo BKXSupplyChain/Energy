@@ -69,14 +69,15 @@ func objectIdToB64(in bson.ObjectId) string {
 
 func ForgeToken(d *types.SocketInfo, ownerAddr string) string {
 	id := ownerAddr + eth.PubkeyToAddress(utils.HexToPublicKey(d.NeighborKey)).Hex()
-	d.SensorID = fmt.Sprintf("%16x", rand.Uint64())
+	d.SensorID = fmt.Sprintf("%8X%8X", rand.Uint32(), rand.Uint32())
 	Add(d, id)
 	return id
 }
 
 func TokenGetPower(id string, fromTime int64) (power float32) {
 	sensColl := session.DB(getMongoDatabase()).C(getMongoMetricCollection())
-	sensQ := sensColl.Find(bson.M{"sensorID": bson.ObjectIdHex(id), "Timestamp": bson.M{"$gt": fromTime * 1e6}}).Sort("-Timestamp").Limit(2).Iter()
+	sensQ := sensColl.Find(bson.M{"sensorid": id, "timestamp": bson.M{"$gt": fromTime * 1e6}}).Sort("-timestamp").Limit(2).Iter()
+
 	var prevP, curP types.SensorPacket
 	if !sensQ.Next(&curP) || !sensQ.Next(&prevP) {
 		return 0

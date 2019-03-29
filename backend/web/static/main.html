@@ -8,32 +8,34 @@
 <ul>
     <li><a class="active">Main</a></li>
     <li><a href="/personal">Account</a></li>
+    <li><a href="/newsocket">Add neighbour</a></li>
 </ul>
-<div id="table">
+<table id="table">
 
-</div>
+</table>
 <script>
     b = document.getElementById("table")
     serverAddr = '%s/mainData'
     function update_sockets() {
         var req = new XMLHttpRequest();
         req.open('post', serverAddr, true);
-        req.send();
         req.onreadystatechange = function () {
-            if (req.readyState == req.READYSTATE_COMPLETE) {
-                b.innerHTML = ""
-                for (line of JSON.parse(req.body)) {
-                    b.innerHTML += "<tr>"
-                    for (i = 0; i < 4; ++i) {
-                        b.innerHTML += "<td>" + line[i] + "</td>"
+            if (req.readyState == 4) {
+                tb = ""
+                for (line of JSON.parse(req.responseText)) {
+                    tb += "<tr>"
+                    for (i = 0; i < 3; ++i) {
+                        tb += "<td>" + line[i] + "</td>"
                     }
-                    b.innerHTML += "</td><a href='/socket/?id=" + line[4] + "'><input type='button' value='config'></a></td></tr>"
+                    tb += "<td><a href='/socket/?id=" + line[3] + "'><input type='button' value='config'></a></td></tr>"
                 }
+                b.innerHTML = tb
             }
         }
+        req.send();
     }
     update_sockets()
-    setInterval(update_sockets, 3000)
+    setInterval(update_sockets, 2000)
 </script>
 </body>
 </html>

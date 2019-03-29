@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -32,13 +33,14 @@ func PrivateHexToAddress(private string) string {
 }
 
 func HexToPublicKey(in string) ecdsa.PublicKey {
-	a, _ := hex.DecodeString(in)
-	b, _ := eth.UnmarshalPubkey(a)
-	return *b
+	a, err := hex.DecodeString(in)
+	CheckFatal(err)
+	var x, y big.Int
+	x.SetBytes(a[:32])
+	y.SetBytes(a[32:])
+	return ecdsa.PublicKey{eth.S256(), &x, &y}
 }
 
-func PublicKeyToHex(in string) ecdsa.PublicKey {
-	a, _ := hex.DecodeString(in)
-	b, _ := eth.UnmarshalPubkey(a)
-	return *b
+func PublicKeyToHex(in ecdsa.PublicKey) string {
+	return ""
 }
