@@ -224,13 +224,12 @@ func sendProposal(proposal types.Proposal, socID string, key ecdsa.PublicKey) {
 
 func socketPage(w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(r)
-	if err != nil || !strings.HasPrefix(r.URL.RawQuery, "id=0x") {
+	if err != nil || !strings.HasPrefix(r.URL.RawQuery, "id=") {
 		http.Redirect(w, r, "/?err="+err.Error(), 307)
 		return
 	}
-	id, _ := hex.DecodeString(string(r.URL.RawQuery[5:]))
 	var soc types.SocketInfo
-	db.Get(&soc, string(id))
+	db.Get(&soc, string(r.URL.RawQuery[3:]))
 	if soc.Owner != user.Username {
 		http.Redirect(w, r, "/?err=Access denied", 307)
 	}
