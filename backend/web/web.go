@@ -220,22 +220,36 @@ func socketPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func socketData(w http.ResponseWriter, r *http.Request) {
-	socketID = r.Body()
-	user, err := getUser(r)
+	byteSocketID, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Redirect(w, r, "/?err=Auth error", 307)
-		return
+		http.Redirect(w, r, "/?err=Unknown error", 307)
+		log.Fatal("Parsing error")
+		return 
 	}
+	socketID := string(byteSocketID)
 	var soc types.SocketInfo
 	db.Get(&soc, socketID)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("["))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.SensorID)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Owner)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.Alias)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.NeighborAddr)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.NeighborKey)))
-	w.Write([]byte(fmt.Sprintf("[\"%s\"", soc.ActiveContract)))
+	w.Write([]byte("["))
+	w.Write([]byte(fmt.Sprintf("[SensorID,\"%s\"]", soc.SensorID)))
+	w.Write([]byte(fmt.Sprintf("[Owner,\"%s\"]", soc.Owner)))
+	w.Write([]byte(fmt.Sprintf("[Alias,\"%s\"]", soc.Alias)))
+	w.Write([]byte(fmt.Sprintf("[Neighbour address,\"%s\"]", soc.NeighborAddr)))
+	w.Write([]byte(fmt.Sprintf("[Neighbour key,\"%s\"]", soc.NeighborKey)))
+	w.Write([]byte(fmt.Sprintf("[Active contract, \"%s\"]", soc.ActiveContract)))
+	w.Write([]byte("]"))
+	w.Write([]byte("["))
+	for _, propID := range soc.Proposals {
+		var prop types.Proposal
+		db.Get(&prop, propID)
+		w.Write([]byte(fmt.Sprintf("[ID,\"%s\"]", prop.ID)))
+		w.Write([]byte(fmt.Sprintf("[Price,\"%s\"]", strconv.FormatUint(prop.Price, 10))))
+		w.Write([]byte(fmt.Sprintf("[Total Amount,\"%s\"]", prop.TotalAmount.String())))
+		w.Write([]byte(fmt.Sprintf("[Relative error,\"%.6f\"]", prop.RelError)))
+		w.Write([]byte(fmt.Sprintf("[Absolute error,\"%s\"]", prop.AbsError.String())))
+		w.Write([]byte(fmt.Sprintf("[TTl,\"%s\"]", strconv.FormatUint(prop.TTL, 10))))
+	}
 	w.Write([]byte("]"))
 }
 
@@ -274,7 +288,11 @@ func Serve() {
 	http.HandleFunc("/contract/impl", concludeContract)
 	http.HandleFunc("/contractData", contractData)
 	http.HandleFunc("/socket", socketPage)
+<<<<<<< HEAD
+	http.HandleFunc("/socketData", socketData)
+=======
 	http.HandleFunc("/newsocket", serveFile("./web/static/style.css"))
 	http.HandleFunc("/newsocket/impl", createSocket)
+>>>>>>> origin/contract_page
 	http.ListenAndServe(":80", nil)
 }

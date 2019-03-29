@@ -26,8 +26,8 @@
                     b.innerHTML = ""
                     for (line of JSON.parse(req.body)) {
                         b.innerHTML += "<tr>"
-                        for (i = 0; i < 2; ++i) {
-                            b.innerHTML += "<td>" + line[i] + "</td>"
+                        for (elems of line) {
+                            b.innerHTML += "<td>" + elems + "</td>"
                         }
                         b.innerHTML += "</tr>"
                     }
