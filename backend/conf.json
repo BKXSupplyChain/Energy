@@ -1,5 +1,5 @@
 {
-  "selfAddress" : "54.180.89.210",
+  "selfAddress" : "http://54.180.89.210:1000",
   "mongo": {
     "connection_string": "mongodb://mongo:27017",
     "sensors": "sensors",

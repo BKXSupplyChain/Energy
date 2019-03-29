@@ -9,39 +9,17 @@
     <li><a href="/personal">Account</a></li>
     <li><a href="/newsocket">Add neighbour</a></li>
 </ul>
-    <div id="table">
+<table><tr><td>Sensor token: </td><td>%s</td></tr>
+    <tr><td><b>Active proposal</b></td></tr>
+    <tr><td>Price: </td><td>NA</td></tr>
+    <tr><td>Power total: </td><td>NA</td></tr>
+    <tr><td>Power left: </td><td>NA</td></tr>
+</table>
+    <input type="button" value="Abort exchange">
 
-    </div>
-    <script>
-        b = document.getElementById("table")
-        path = document.URL()
-        function getId(path) {
-            var id;
-            path = path.split('?')[1];
-            id = path.split('=')[1];
-            return id;
-        }
-        socketId = getId(path)
-        serverAddres = "%s/socketData"
-        function updateSocketInfo(socketId) {
-            var req = XMLHttpRequest();
-            req.open('post', serverAddres, true);
-            req.send(socketId);
-            req.onreadystatechange = function() {
-                if (req.readyState == req.READYSTATE_COMPLETE) {
-                    b.innerHTML = ""
-                    for (line of JSON.parse(req.body)) {
-                        b.innerHTML += "<tr>"
-                        for (elems of line) {
-                            b.innerHTML += "<td>" + elems + "</td>"
-                        }
-                        b.innerHTML += "</tr>"
-                    }
-                }
-            }
-        }
-        updateSocketInfo(socketId)
-        setInterval(updateSocketInfo, 3000, socketId)
-    </script>
+<table>
+    <tr><td><b>Available proposals</b></td></tr>
+</table>
+<a href="/proposal"><input type="button" value="Create proposal"></a>
 </body>
 </html>

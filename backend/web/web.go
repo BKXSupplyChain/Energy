@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/BKXSupplyChain/Energy/backend/conf"
 	"github.com/BKXSupplyChain/Energy/db"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
@@ -222,7 +223,19 @@ func sendProposal(proposal types.Proposal, socID string, key ecdsa.PublicKey) {
 }
 
 func socketPage(w http.ResponseWriter, r *http.Request) {
-	serveFile("./web/static/socket.html")
+	user, err := getUser(r)
+	if err != nil || !strings.HasPrefix(r.URL.RawQuery, "id=0x") {
+		http.Redirect(w, r, "/?err="+err.Error(), 307)
+		return
+	}
+	id, _ := hex.DecodeString(string(r.URL.RawQuery[5:]))
+	var soc types.SocketInfo
+	db.Get(&soc, string(id))
+	if soc.Owner != user.Username {
+		http.Redirect(w, r, "/?err=Access denied", 307)
+	}
+	pattern, _ := ioutil.ReadFile("./web/static/socket.html")
+	w.Write([]byte(fmt.Sprintf(string(pattern), soc.SensorID+conf.GetSelfAddress())))
 }
 
 func socketData(w http.ResponseWriter, r *http.Request) {
