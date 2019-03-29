@@ -2,6 +2,7 @@ FROM golang:1.7.3 AS builder
 
 RUN go get -d -v github.com/globalsign/mgo
 RUN go get -d -v github.com/micro/go-config
+RUN go get -d -v github.com/ethereum/go-ethereum/crypto
 
 ADD . /go/src/github.com/BKXSupplyChain/Energy
 WORKDIR /go/src/github.com/BKXSupplyChain/Energy/sensors

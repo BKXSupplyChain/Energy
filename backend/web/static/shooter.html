@@ -85,7 +85,7 @@
 
             var req = new XMLHttpRequest();
             req.open('post', serverAddr, true);
-            req.send(JSON.stringify({'total' : total, 'sensorID' : sensorID}));
+            req.send(JSON.stringify({'total' : Math.round(total), 'sensorID' : sensorID}));
         }
 
         setInterval(commit, 2000)

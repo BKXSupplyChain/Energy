@@ -1,0 +1,42 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <h1>Contract conclusion</h1>
+    <div id="table">
+
+    </div>
+    <script>
+        b = document.getElementById("table")
+        serverAddr = '%s/contractData'
+        function getContractInfo() {
+            var req = XMLHttpRequest();
+            req.open('post', serverAddr, true);
+            req.send();
+            req.onreadystatechange = function () {
+                if (req.readyState == req.READYSTATE_COMPLETE) {
+                    b.innerHTML = ""
+                    for (line of JSON.parse(req.body)) {
+                        b.innerHTML += "<tr>"
+                        for (i = 0; i < 2; ++i) {
+                            b.innerHTML += "<td>" + line[i] + "</td>"
+                        }
+                        b.innerHTML += "</tr>"
+                    }
+                }
+            }
+        }
+        getContractInfo()
+    </script>
+    
+    <div class="formdiv"><form action="/contract/impl" method="post">
+        Price: <input name="price" type="text" class="textinput"/> <br/>
+        Amount: <input name="amount" type="text" class="textinput" /> <br/>
+        Durability: <input name="durability" type="text" class="textinput" pattern="^[0-9]+$" /> <br/>
+        Maximum relative error: <input name="relerror" type="text" class="textinput" /> <br/>
+        Maximum absolute error: <input name="abserror" type="text" class="textinput"/> <br/>
+        <input type="submit" value="Conclude contract" style="width: 45%" />
+    </form></div>
+</body>
+</html>

@@ -25,10 +25,8 @@ type SocketInfo struct {
 }
 
 type Proposal struct {
-	ID          string
-	From        string
-	To          string
-	Price       uint64
+	ID    string
+	Price uint64
 	TotalAmount big.Int
 	RelError    float64
 	AbsError    big.Int

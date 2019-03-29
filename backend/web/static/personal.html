@@ -4,11 +4,19 @@
     <title>Account</title>
 </head>
 <body>
-<h1>Control panel</h1>
-<div class="formdiv" ><form action="/personal/chpass" method="post">
-    <br /> New password:
-    <input name="new_password" type="password" class="textinput" autocomplete="new-password" /><br /> <input type="submit" value="change password" style="width: 45%">
-</form></div>
+<ul>
+    <li><a href="/main">Main</a></li>
+    <li><a class="active">Account</a></li>
+    <li><a href="/newsocket">Add neighbour</a></li>
+</ul>
+<form action="/personal/chpass" method="post" >
+    <label style="font-size: 25">New password:</label>
+    <input name="new_password" type="password" class="textinput" autocomplete="new-password" style="width: 600px !important" />
+    <input type="submit" value="change password" style="width: 45%"></form>
+<table><tr><td>Currency free: </td><td>0</td></tr>
+    <tr><td>Currency frozen:</td><td>0</td></tr>
+</table>
 
 </body>
+
 </html>
