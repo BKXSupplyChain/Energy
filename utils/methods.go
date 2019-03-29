@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/ecdsa"
+	"encoding/hex"
 	"strconv"
 	"strings"
 
@@ -27,4 +29,16 @@ func PrivateHexToAddress(private string) string {
 		return ""
 	}
 	return eth.PubkeyToAddress(priv.PublicKey).Hex()
+}
+
+func HexToPublicKey(in string) ecdsa.PublicKey {
+	a, _ := hex.DecodeString(in)
+	b, _ := eth.UnmarshalPubkey(a)
+	return *b
+}
+
+func PublicKeyToHex(in string) ecdsa.PublicKey {
+	a, _ := hex.DecodeString(in)
+	b, _ := eth.UnmarshalPubkey(a)
+	return *b
 }

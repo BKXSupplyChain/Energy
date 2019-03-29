@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/BKXSupplyChain/Energy/types"
 	"github.com/BKXSupplyChain/Energy/utils"
+	eth "github.com/ethereum/go-ethereum/crypto"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/micro/go-config"
@@ -67,9 +68,9 @@ func objectIdToB64(in bson.ObjectId) string {
 }
 
 func ForgeToken(d *types.SocketInfo, ownerAddr string) string {
-	coll := session.DB(getMongoDatabase()).C(getMongoGeneralCollection())
-	id := ownerAddr + d.NeighborAddr
+	id := ownerAddr + eth.PubkeyToAddress(utils.HexToPublicKey(d.NeighborKey)).Hex()
 	d.SensorID = fmt.Sprintf("%16x", rand.Uint64())
+	Add(d, id)
 	return id
 }
 
